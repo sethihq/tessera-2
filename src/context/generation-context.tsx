@@ -80,7 +80,7 @@ export function GenerationProvider({ children }: { children: ReactNode }) {
           }
           result = await generateAssetsFromVisualGuide({
             visualGuideDataUri: params.visualGuideDataUri,
-            worldStyleId: 'custom-style', // Placeholder ID
+            worldStyle: worldStyle,
             assetType: params.assetType,
             parameters: 'tile_size: 32x32', // Placeholder parameters
           });

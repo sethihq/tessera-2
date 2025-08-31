@@ -9,13 +9,14 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { extractWorldStyle, type ExtractWorldStyleOutput } from './extract-world-style-from-reference-art';
 
 const GenerateAssetsFromVisualGuideInputSchema = z.object({
-  worldStyleId: z.string().describe('The ID of the World Style to use for asset generation.'),
+  worldStyle: z.any().describe("The World Style object to use for asset generation."),
   visualGuideDataUri: z
     .string()
     .describe(
-      'A visual guide as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.' // Corrected typo here
+      'A visual guide as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'
     ),
   assetType: z.enum(['parallax', 'tileset', 'props', 'fx']).describe('The type of asset to generate.'),
   parameters: z.string().optional().describe('Additional parameters to guide asset generation.'),
@@ -36,24 +37,6 @@ export async function generateAssetsFromVisualGuide(
   return generateAssetsFromVisualGuideFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateAssetsFromVisualGuidePrompt',
-  input: {schema: GenerateAssetsFromVisualGuideInputSchema},
-  output: {schema: GenerateAssetsFromVisualGuideOutputSchema},
-  prompt: `You are an expert game asset generator, skilled at creating assets that match a specific style.
-
-You will generate a game asset of type {{{assetType}}} based on the provided visual guide and the specified World Style (ID: {{{worldStyleId}}}). The World Style dictates the overall look and feel of the asset.
-
-Visual Guide: {{media url=visualGuideDataUri}}
-
-Additional Parameters: {{{parameters}}}
-
-Ensure that the generated asset is suitable for use in a game engine, with appropriate formatting and metadata.
-
-Return the generated asset as a data URI.
-`,
-});
-
 const generateAssetsFromVisualGuideFlow = ai.defineFlow(
   {
     name: 'generateAssetsFromVisualGuideFlow',
@@ -61,7 +44,37 @@ const generateAssetsFromVisualGuideFlow = ai.defineFlow(
     outputSchema: GenerateAssetsFromVisualGuideOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const worldStyle = input.worldStyle as ExtractWorldStyleOutput;
+
+    const generationPrompt = `Generate a game asset of type "${input.assetType}" that matches the following style characteristics. 
+    The asset should be guided by the provided visual sketch.
+
+    Style:
+    - Palette: ${worldStyle.palette.join(', ')}
+    - Textures: ${worldStyle.textures}
+    - Perspective: ${worldStyle.perspective}
+    - Line Weight: ${worldStyle.lineWeight}
+    
+    ${input.parameters ? `Additional Parameters: ${input.parameters}` : ''}
+    `;
+
+    const {media} = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-preview-image-generation',
+        prompt: [
+            {media: {url: input.visualGuideDataUri}},
+            {text: generationPrompt},
+        ],
+        config: {
+            responseModalities: ['TEXT', 'IMAGE'],
+        },
+    });
+
+    if (!media) {
+        throw new Error("Asset generation failed.");
+    }
+    
+    return {
+        assetDataUri: media.url,
+    };
   }
 );

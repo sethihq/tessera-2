@@ -1,9 +1,9 @@
 'use server';
 /**
- * @fileOverview Generates game assets from a text prompt using Genkit and Nano Banana's API.
+ * @fileOverview Generates game assets from a text prompt using Genkit.
  *
  * - generateAssetsFromTextPrompt - A function that generates game assets based on a text prompt.
- * - GenerateAssetsFromTextPromptInput - The input type for the generateAssetsFromTextPrompt function.
+ * - GenerateAssetsFromTextPromptInput - The input type for the generateAssetsFromText-prompt function.
  * - GenerateAssetsFromTextPromptOutput - The return type for the generateAssetsFromTextPrompt function.
  */
 
@@ -31,8 +31,9 @@ const generateAssetsFromTextPromptFlow = ai.defineFlow(
     outputSchema: GenerateAssetsFromTextPromptOutputSchema,
   },
   async input => {
-    // Call Nano Banana's API to generate the image
+    // Call an image generation model
     const {media} = await ai.generate({
+      model: 'googleai/imagen-4.0-fast-generate-001',
       prompt: input.prompt,
     });
 
