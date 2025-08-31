@@ -1,6 +1,5 @@
 "use client";
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useGeneration } from "@/context/generation-context";
 import { Button } from "./ui/button";
@@ -12,8 +11,7 @@ export function DashboardHeader() {
   const { generatedAsset, clearAsset } = useGeneration();
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background/50 backdrop-blur-sm px-4 md:px-6">
-      <SidebarTrigger className="md:hidden" />
+    <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background px-4 md:px-6">
       <div className="flex-1">
         {/* Placeholder for breadcrumbs or title */}
       </div>
@@ -28,16 +26,16 @@ export function DashboardHeader() {
                 className="flex items-center gap-2"
             >
                 <Button variant="ghost" size="icon" onClick={clearAsset} aria-label="Clear asset">
-                    <X className="h-4 w-4" />
+                    <X />
                 </Button>
                 <Button variant="outline">
-                    <Share2 className="mr-2 h-4 w-4" />
+                    <Share2 />
                     Share
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button>
-                            <Download className="mr-2 h-4 w-4" />
+                            <Download />
                             Export
                         </Button>
                     </DropdownMenuTrigger>
