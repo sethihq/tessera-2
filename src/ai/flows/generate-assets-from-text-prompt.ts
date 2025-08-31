@@ -33,8 +33,11 @@ const generateAssetsFromTextPromptFlow = ai.defineFlow(
   async input => {
     // Call an image generation model
     const {media} = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
+      model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: input.prompt,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
     });
 
     if (!media) {
