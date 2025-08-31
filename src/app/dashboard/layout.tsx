@@ -6,17 +6,22 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarFooter,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EditorPanel } from "@/components/editor-panel";
 import { GenerationProvider } from "@/context/generation-context";
 import { TesseraLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Home, Settings, LifeBuoy } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard-header";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <GenerationProvider>
       <SidebarProvider>
+        <div className="flex h-screen bg-muted/30">
         <Sidebar>
           <SidebarHeader className="p-4">
              <div className="flex items-center gap-3">
@@ -24,14 +29,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <h1 className="text-xl font-semibold">Tessera</h1>
             </div>
           </SidebarHeader>
-          <SidebarContent className="p-0">
+          <SidebarContent className="p-4">
             <ScrollArea className="h-full">
               <EditorPanel />
             </ScrollArea>
           </SidebarContent>
-          <SidebarFooter className="p-4">
-             <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
+          <SidebarFooter className="p-4 flex flex-col gap-2">
+            <Button variant="ghost" className="justify-start gap-2">
+                <Home className="size-4" />
+                <span>Home</span>
+            </Button>
+            <Button variant="ghost" className="justify-start gap-2">
+                <Settings className="size-4" />
+                <span>Settings</span>
+            </Button>
+            <Button variant="ghost" className="justify-start gap-2">
+                <LifeBuoy className="size-4" />
+                <span>Help</span>
+            </Button>
+             <div className="flex items-center gap-3 pt-4 mt-auto border-t">
+                <Avatar className="h-9 w-9">
                     <AvatarImage src="https://picsum.photos/100" alt="User avatar" data-ai-hint="user avatar"/>
                     <AvatarFallback>DV</AvatarFallback>
                 </Avatar>
@@ -42,9 +59,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
-          {children}
-        </SidebarInset>
+        <div className="flex flex-col flex-1">
+            <DashboardHeader />
+            <main className="flex-1 overflow-auto">
+                <SidebarInset>
+                    {children}
+                </SidebarInset>
+            </main>
+        </div>
+        </div>
       </SidebarProvider>
     </GenerationProvider>
   );
