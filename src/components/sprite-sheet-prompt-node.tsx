@@ -9,6 +9,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { ScrollArea } from './ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 interface SpriteSheetPromptNodeProps {
   id: string;
@@ -106,63 +107,75 @@ export function SpriteSheetPromptNode({ id, data, onGenerate }: SpriteSheetPromp
           <ScrollArea 
             className="h-96 w-full pr-4"
           >
-            <div className="space-y-4">
-              <h4 className="font-semibold">Character</h4>
-              <div className="space-y-2">
-                <Label>Identity</Label>
-                <Input
-                  defaultValue={promptData.sprite_sheet.character.identity}
-                  onChange={e => handleInputChange('sprite_sheet.character.identity', e.target.value)}
-                  placeholder="e.g., a wizard with long white beard..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Base Pose</Label>
-                <Input
-                  defaultValue={promptData.sprite_sheet.character.base_pose}
-                  onChange={e => handleInputChange('sprite_sheet.character.base_pose', e.target.value)}
-                  placeholder="e.g., neutral pose, frontal view..."
-                />
-              </div>
-
-              <h4 className="font-semibold">Animation</h4>
-              <div className="space-y-2">
-                <Label>Title</Label>
-                <Input
-                   defaultValue={promptData.sprite_sheet.animation.title}
-                   onChange={e => handleInputChange('sprite_sheet.animation.title', e.target.value)}
-                  placeholder="e.g., casting fireball spell"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">Stages</h4>
-                  <Button variant="outline" size="sm" onClick={addStage}><PlusCircle className="mr-2 h-4 w-4" /> Add Stage</Button>
-                </div>
-                {promptData.sprite_sheet.animation.stages.map((stage: any, index: number) => (
-                  <div key={index} className="p-2 border rounded-md space-y-2 relative">
-                     <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-1 right-1" onClick={() => removeStage(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                     <Label>Stage {stage.stage_number}</Label>
-                     <Input placeholder="Label (e.g., Setup)" defaultValue={stage.label} onChange={(e) => handleStageChange(index, 'label', e.target.value)} />
-                     <Textarea placeholder="Description..." defaultValue={stage.description} onChange={(e) => handleStageChange(index, 'description', e.target.value)} />
+            <Accordion type="multiple" defaultValue={['character', 'animation']} className="w-full">
+              <AccordionItem value="character">
+                <AccordionTrigger>Character</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Identity</Label>
+                    <Input
+                      defaultValue={promptData.sprite_sheet.character.identity}
+                      onChange={e => handleInputChange('sprite_sheet.character.identity', e.target.value)}
+                      placeholder="e.g., a wizard with long white beard..."
+                    />
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-2">
+                    <Label>Base Pose</Label>
+                    <Input
+                      defaultValue={promptData.sprite_sheet.character.base_pose}
+                      onChange={e => handleInputChange('sprite_sheet.character.base_pose', e.target.value)}
+                      placeholder="e.g., neutral pose, frontal view..."
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
 
-              <div className="space-y-2">
-                 <div className="flex items-center justify-between">
-                    <h4 className="font-semibold">Frames</h4>
-                </div>
-                {promptData.sprite_sheet.frames.map((frame: any, index: number) => (
-                   <div key={index} className="p-2 border rounded-md space-y-2 relative">
-                     <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-1 right-1" onClick={() => removeFrame(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                     <Label>Frame {frame.frame_number}</Label>
-                     <Textarea placeholder="Description..." defaultValue={frame.description} onChange={(e) => handleFrameChange(index, e.target.value)} />
-                   </div>
-                ))}
-              </div>
-            </div>
+              <AccordionItem value="animation">
+                <AccordionTrigger>Animation</AccordionTrigger>
+                <AccordionContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Title</Label>
+                    <Input
+                      defaultValue={promptData.sprite_sheet.animation.title}
+                      onChange={e => handleInputChange('sprite_sheet.animation.title', e.target.value)}
+                      placeholder="e.g., casting fireball spell"
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="stages">
+                <AccordionTrigger>Stages</AccordionTrigger>
+                 <AccordionContent className="space-y-2">
+                     <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">Animation Stages</h4>
+                        <Button variant="outline" size="sm" onClick={addStage}><PlusCircle className="mr-2 h-4 w-4" /> Add Stage</Button>
+                    </div>
+                    {promptData.sprite_sheet.animation.stages.map((stage: any, index: number) => (
+                      <div key={index} className="p-2 border rounded-md space-y-2 relative">
+                         <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-1 right-1" onClick={() => removeStage(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                         <Label>Stage {stage.stage_number}</Label>
+                         <Input placeholder="Label (e.g., Setup)" defaultValue={stage.label} onChange={(e) => handleStageChange(index, 'label', e.target.value)} />
+                         <Textarea placeholder="Description..." defaultValue={stage.description} onChange={(e) => handleStageChange(index, 'description', e.target.value)} />
+                      </div>
+                    ))}
+                 </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="frames">
+                <AccordionTrigger>Frames</AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                   {promptData.sprite_sheet.frames.map((frame: any, index: number) => (
+                       <div key={index} className="p-2 border rounded-md space-y-2 relative">
+                         <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-1 right-1" onClick={() => removeFrame(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                         <Label>Frame {frame.frame_number}</Label>
+                         <Textarea placeholder="Description..." defaultValue={frame.description} onChange={(e) => handleFrameChange(index, e.target.value)} />
+                       </div>
+                    ))}
+                </AccordionContent>
+              </AccordionItem>
+
+            </Accordion>
           </ScrollArea>
         </div>
         <Handle type="source" position={Position.Bottom} />

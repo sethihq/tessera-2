@@ -18,6 +18,7 @@ import ReactFlow, {
   useReactFlow,
   getOutgoers,
   getIncomers,
+  EdgeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
@@ -36,6 +37,7 @@ import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CustomEdge } from '@/components/custom-edge';
 
 
 const initialNodes: Node[] = [];
@@ -53,7 +55,7 @@ function Canvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
-  const { getNodes, setNodes: setReactFlowNodes, getEdges } = useReactFlow();
+  const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges } = useReactFlow();
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
@@ -71,6 +73,15 @@ function Canvas() {
       });
       return;
     }
+    
+    setReactFlowEdges(eds => 
+      eds.map(e => {
+        if (e.source === nodeId) {
+          return { ...e, type: 'custom', animated: true };
+        }
+        return e;
+      })
+    );
 
     setReactFlowNodes(nds => 
       nds.map(n => {
@@ -124,9 +135,18 @@ function Canvas() {
               return n;
             })
           );
+        } finally {
+            setReactFlowEdges(eds => 
+              eds.map(e => {
+                if (e.source === nodeId) {
+                  return { ...e, type: 'default', animated: false };
+                }
+                return e;
+              })
+            );
         }
     }
-  }, [getNodes, setReactFlowNodes, toast, edges]);
+  }, [getNodes, setReactFlowNodes, toast, edges, setReactFlowEdges]);
 
   const handleGenerateGif = useCallback(async (nodeId: string, grid: string) => {
     const allNodes = getNodes();
@@ -156,6 +176,15 @@ function Canvas() {
       });
       return;
     }
+
+    setReactFlowEdges(eds => 
+      eds.map(e => {
+        if (e.target === nodeId) {
+          return { ...e, type: 'custom', animated: true };
+        }
+        return e;
+      })
+    );
 
     setReactFlowNodes(nds => 
       nds.map(n => {
@@ -198,9 +227,18 @@ function Canvas() {
                 return n;
             })
         );
+    } finally {
+        setReactFlowEdges(eds => 
+            eds.map(e => {
+                if (e.target === nodeId) {
+                    return { ...e, type: 'default', animated: false };
+                }
+                return e;
+            })
+        );
     }
 
-  }, [getNodes, getEdges, setReactFlowNodes, toast]);
+  }, [getNodes, getEdges, setReactFlowNodes, toast, setReactFlowEdges]);
   
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
@@ -208,6 +246,10 @@ function Canvas() {
     image: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
     output: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
   }), [handleGenerate, handleGenerateGif]);
+
+  const edgeTypes: EdgeTypes = useMemo(() => ({
+    custom: CustomEdge,
+  }), []);
 
 
   const onConnect = useCallback(
@@ -336,6 +378,7 @@ function Canvas() {
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
@@ -348,6 +391,12 @@ function Canvas() {
                 className={activeTool === 'pan' ? 'cursor-grab' : ''}
                 proOptions={proOptions}
             >
+                 <defs>
+                    <linearGradient id="animated-gradient-url" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
+                        <stop offset="100%" style={{stopColor: 'hsl(var(--accent-foreground))', stopOpacity: 1}} />
+                    </linearGradient>
+                </defs>
                 <Background />
                 <FloatingControls activeTool={activeTool} onToolChange={setActiveTool} />
             </ReactFlow>
