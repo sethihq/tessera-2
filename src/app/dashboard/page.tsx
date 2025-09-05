@@ -38,43 +38,13 @@ import { Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
-const initialNodes: Node[] = [
-  { 
-    id: '1', 
-    position: { x: 250, y: 5 }, 
-    data: { 
-      label: 'Prompt Node', 
-      prompt: 'A medieval castle on a hill' 
-    }, 
-    type: 'prompt' 
-  },
-  { 
-    id: '2', 
-    position: { x: 100, y: 300 }, 
-    data: { 
-      label: 'Sprite Sheet',
-      image: null,
-      loading: false,
-    }, 
-    type: 'image' 
-  },
-  { 
-    id: '3', 
-    position: { x: 400, y: 300 }, 
-    data: { 
-      label: 'Output',
-      image: null,
-      loading: false, 
-    }, 
-    type: 'output' 
-  },
-];
+const initialNodes: Node[] = [];
 
-const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
+const initialEdges: Edge[] = [];
 
 const proOptions = { hideAttribution: true };
 
-let id = 4;
+let id = 1;
 const getId = () => `${id++}`;
 
 function Canvas() {
