@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, DragEvent } from 'react';
+import React, { useState, useCallback, DragEvent, useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -11,21 +11,24 @@ import ReactFlow, {
   Connection,
   Edge,
   Node,
+  NodeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
+import { PromptNode } from '@/components/prompt-node';
+import { ImageNode } from '@/components/image-node';
 
 const initialNodes: Node[] = [
-  { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node' }, type: 'input' },
-  { id: '2', position: { x: 100, y: 100 }, data: { label: 'Sprite Sheet' } },
-  { id: '3', position: { x: 400, y: 100 }, data: { label: 'Sprite Sheet to GIF' } },
+  { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node', prompt: 'A medieval castle on a hill' }, type: 'prompt' },
+  { id: '2', position: { x: 100, y: 200 }, data: { label: 'Sprite Sheet' }, type: 'image' },
+  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Output' }, type: 'output' },
 ];
 
 const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
 
 const nodeColor = (node: Node) => {
     switch (node.type) {
-      case 'input':
+      case 'prompt':
         return '#6ede87';
       case 'output':
         return '#6865A5';
@@ -41,6 +44,13 @@ export default function CanvasPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+  const nodeTypes: NodeTypes = useMemo(() => ({
+    prompt: PromptNode,
+    image: ImageNode,
+    output: ImageNode,
+  }), []);
+
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -67,23 +77,43 @@ export default function CanvasPage() {
         y: event.clientY,
       });
 
-      const newNode: Node = {
-        id: getId(),
-        type,
-        position,
-        data: { label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node` },
-      };
-
-      if (type === 'prompt') {
-          newNode.type = 'input';
-          newNode.data.label = 'Prompt Node';
-      } else if (type === 'output') {
-          newNode.type = 'output';
-          newNode.data.label = 'Output Node';
-      } else if (type === 'sprite-sheet') {
-        newNode.data.label = 'Sprite Sheet';
-      } else if (type === 'generate-gif') {
-        newNode.data.label = 'Generate GIF';
+      let newNode: Node;
+      
+      switch (type) {
+        case 'prompt':
+          newNode = {
+            id: getId(),
+            type,
+            position,
+            data: { label: 'Prompt Node', prompt: '' },
+          };
+          break;
+        case 'sprite-sheet':
+          newNode = {
+            id: getId(),
+            type: 'image',
+            position,
+            data: { label: 'Sprite Sheet' },
+          };
+          break;
+         case 'generate-gif':
+            newNode = {
+                id: getId(),
+                type: 'image',
+                position,
+                data: { label: 'Generate GIF' },
+            };
+            break;
+        case 'output':
+            newNode = {
+                id: getId(),
+                type: 'output',
+                position,
+                data: { label: 'Output' },
+            };
+            break;
+        default:
+            return;
       }
 
 
@@ -99,6 +129,7 @@ export default function CanvasPage() {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
+                nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}

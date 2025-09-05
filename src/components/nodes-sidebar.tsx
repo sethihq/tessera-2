@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, Image as ImageIcon } from 'lucide-react';
+import { Workflow, Text, ImageIcon, MoveRight, Scissors } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 export function NodesSidebar() {
@@ -55,6 +55,7 @@ export function NodesSidebar() {
               onDragStart={(event) => onDragStart(event, 'generate-gif')}
               draggable
              >
+                <Scissors className="mr-2 h-4 w-4" />
               Generate GIF
             </Button>
           </CardContent>
@@ -73,6 +74,7 @@ export function NodesSidebar() {
               onDragStart={(event) => onDragStart(event, 'output')}
               draggable
              >
+                <MoveRight className="mr-2 h-4 w-4" />
               Output
             </Button>
           </CardContent>
