@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { generateAssetsFromTextPrompt } from '@/ai/flows/generate-assets-from-text-prompt';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const initialNodes: Node[] = [
@@ -77,7 +78,7 @@ function Canvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
-  const { getNodes } = useReactFlow();
+  const { getNodes, setNodes: setReactFlowNodes } = useReactFlow();
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
@@ -85,7 +86,7 @@ function Canvas() {
     const promptNode = allNodes.find(n => n.id === nodeId);
     if (!promptNode) return;
 
-    const downstreamNodes = getOutgoers(promptNode, nodes, edges);
+    const downstreamNodes = getOutgoers(promptNode, allNodes, edges);
 
     if (downstreamNodes.length === 0) {
       toast({
@@ -96,7 +97,7 @@ function Canvas() {
       return;
     }
 
-    setNodes(nds => 
+    setReactFlowNodes(nds => 
       nds.map(n => {
         if (downstreamNodes.some(dn => dn.id === n.id)) {
           return {
@@ -111,7 +112,7 @@ function Canvas() {
     try {
       const { assetDataUri } = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
       
-      setNodes(nds => 
+      setReactFlowNodes(nds => 
         nds.map(n => {
           if (downstreamNodes.some(dn => dn.id === n.id)) {
             return {
@@ -129,7 +130,7 @@ function Canvas() {
         title: "Generation Failed",
         description: "There was an error generating the asset. Please try again.",
       });
-      setNodes(nds => 
+      setReactFlowNodes(nds => 
         nds.map(n => {
           if (downstreamNodes.some(dn => dn.id === n.id)) {
             return {
@@ -141,7 +142,7 @@ function Canvas() {
         })
       );
     }
-  }, [getNodes, setNodes, toast, nodes, edges]);
+  }, [getNodes, setReactFlowNodes, toast, edges]);
   
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
@@ -255,6 +256,7 @@ const projects = [
         image: 'https://picsum.photos/800/600',
         image_hint: 'game level',
         lastUpdated: '2 hours ago',
+        type: 'Personal'
     },
     {
         name: 'Character Sprites',
@@ -263,6 +265,7 @@ const projects = [
         image: 'https://picsum.photos/800/600',
         image_hint: 'character sprite sheet',
         lastUpdated: '5 hours ago',
+        type: 'Personal'
     },
     {
         name: 'Tileset',
@@ -271,6 +274,7 @@ const projects = [
         image: 'https://picsum.photos/800/600',
         image_hint: 'game tileset',
         lastUpdated: '1 day ago',
+        type: 'Kit'
     },
     {
         name: 'Player Controller',
@@ -279,32 +283,15 @@ const projects = [
         image: 'https://picsum.photos/800/600',
         image_hint: 'game character',
         lastUpdated: '3 days ago',
+        type: 'Kit'
     },
 ]
 
-function DashboardPageContent() {
-  const searchParams = useSearchParams();
-  const file = searchParams.get('file');
-
-  if (file) {
+function ProjectGrid({ filter }: { filter: 'All' | 'Personal' | 'Kit' }) {
+    const filteredProjects = projects.filter(p => filter === 'All' || p.type === filter);
     return (
-      <ReactFlowProvider>
-        <Canvas />
-      </ReactFlowProvider>
-    );
-  }
-
-  return (
-     <div>
-        <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold">Projects</h1>
-            <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Project
-            </Button>
-        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {projects.map((item, index) => (
+            {filteredProjects.map((item, index) => (
                 <Link href={item.href} key={index}>
                     <Card className="overflow-hidden transition-all hover:shadow-lg">
                         <AspectRatio ratio={16/9}>
@@ -322,13 +309,54 @@ function DashboardPageContent() {
                         </CardHeader>
                         <CardFooter className="flex justify-between items-center text-sm text-muted-foreground">
                             <span>Updated {item.lastUpdated}</span>
-                            <Badge variant="secondary">{item.project === 'My Game' ? 'Personal' : 'Kit'}</Badge>
+                            <Badge variant="secondary">{item.type}</Badge>
                         </CardFooter>
                     </Card>
                 </Link>
             ))}
         </div>
-    </div>
+    )
+}
+
+function DashboardPageContent() {
+  const searchParams = useSearchParams();
+  const file = searchParams.get('file');
+
+  if (file) {
+    return (
+      <ReactFlowProvider>
+        <Canvas />
+      </ReactFlowProvider>
+    );
+  }
+
+  return (
+     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <Tabs defaultValue="all">
+            <div className="flex items-center">
+                <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="personal">Personal</TabsTrigger>
+                    <TabsTrigger value="kits">Kits</TabsTrigger>
+                </TabsList>
+                <div className="ml-auto flex items-center gap-2">
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        New Project
+                    </Button>
+                </div>
+            </div>
+            <TabsContent value="all">
+                <ProjectGrid filter="All" />
+            </TabsContent>
+            <TabsContent value="personal">
+                <ProjectGrid filter="Personal" />
+            </TabsContent>
+            <TabsContent value="kits">
+                <ProjectGrid filter="Kit" />
+            </TabsContent>
+        </Tabs>
+    </main>
   );
 }
 

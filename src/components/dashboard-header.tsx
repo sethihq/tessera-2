@@ -1,8 +1,9 @@
+
 "use client";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "./ui/button";
-import { Share2, Home } from "lucide-react";
+import { Share2, Home, Search } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Input } from "./ui/input";
 
 export function DashboardHeader() {
   const searchParams = useSearchParams();
@@ -20,29 +22,37 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      <div className="flex items-center gap-2">
-      {fileOpen && (
-        <>
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/dashboard"><Home/></Link>
-        </Button>
-        <Breadcrumb className="hidden md:flex">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-               <BreadcrumbLink asChild>
-                <Link href="/dashboard">My Game</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Main Scene</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        </>
+      {fileOpen ? (
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/dashboard"><Home/></Link>
+          </Button>
+          <Breadcrumb className="hidden md:flex">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                 <BreadcrumbLink asChild>
+                  <Link href="/dashboard">My Game</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Main Scene</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      ) : (
+        <h1 className="text-xl font-semibold md:text-2xl">Projects</h1>
       )}
-      </div>
-      <div className="flex-1" />
+
+      <div className="relative ml-auto flex-1 md:grow-0">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+          />
+        </div>
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm">
           <Share2 className="mr-2 h-4 w-4" />
