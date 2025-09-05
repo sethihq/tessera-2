@@ -84,7 +84,7 @@ export function InputNode({ id, data }: InputNodeProps) {
         ))}
         {data.nodeType === 'animation' ? (
           <>
-            <Handle type="target" position={Position.Left} />
+            <Handle type="target" position={Position.Top} />
             <Handle type="source" position={Position.Right} />
             <Handle type="source" position={Position.Bottom} />
           </>
