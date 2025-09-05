@@ -77,21 +77,19 @@ function Canvas() {
 
     try {
         const outputIncomers = getIncomers(outputNode, allNodes, allEdges);
-        const characterNode = outputIncomers.find(n => n.data.nodeType === 'character');
-
-        if (!characterNode) {
-            throw new Error("A Character node must be connected to the Output node.");
-        }
-        
-        const characterOutgoers = getOutgoers(characterNode, allNodes, allEdges);
-        const animationNode = characterOutgoers.find(n => n.data.nodeType === 'animation');
+        const animationNode = outputIncomers.find(n => n.data.nodeType === 'animation');
 
         if (!animationNode) {
-            throw new Error("An Animation node must be connected from the Character node.");
+            throw new Error("An Animation node must be connected to the Output node.");
+        }
+        
+        const characterNode = getIncomers(animationNode, allNodes, allEdges).find(n => n.data.nodeType === 'character');
+        
+        if (!characterNode) {
+            throw new Error("A Character node must be connected to the Animation node.");
         }
 
-        const animationOutgoers = getOutgoers(animationNode, allNodes, allEdges);
-        const stageNodes = animationOutgoers.filter(n => n.data.nodeType === 'stage');
+        const stageNodes = getOutgoers(animationNode, allNodes, allEdges).filter(n => n.data.nodeType === 'stage');
 
         if (stageNodes.length === 0) {
             throw new Error("At least one Stage node must be connected from the Animation node.");
