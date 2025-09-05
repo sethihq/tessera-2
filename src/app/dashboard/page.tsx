@@ -16,14 +16,13 @@ import ReactFlow, {
   NodeTypes,
   ReactFlowProvider,
   useReactFlow,
-  getOutgoers,
   getIncomers,
+  getOutgoers,
   EdgeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
-import { PromptNode } from '@/components/prompt-node';
-import { SpriteSheetPromptNode } from '@/components/sprite-sheet-prompt-node';
+import { InputNode } from '@/components/input-node';
 import { ImageNode } from '@/components/image-node';
 import { FloatingControls, type Tool } from '@/components/floating-controls';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +30,6 @@ import Image from 'next/image';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { generateAssetsFromTextPrompt } from '@/ai/flows/generate-assets-from-text-prompt';
 import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +39,6 @@ import { CustomEdge } from '@/components/custom-edge';
 
 
 const initialNodes: Node[] = [];
-
 const initialEdges: Edge[] = [];
 
 const proOptions = { hideAttribution: true };
@@ -59,94 +56,103 @@ function Canvas() {
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
+    const allEdges = getEdges();
     
-    const sourceNode = allNodes.find(n => n.id === nodeId);
-    if (!sourceNode) return;
-
-    const downstreamNodes = getOutgoers(sourceNode, allNodes, edges);
-
-    if (downstreamNodes.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: "Generation Error",
-        description: "Please connect the prompt to an output node.",
-      });
-      return;
-    }
-    
-    setReactFlowEdges(eds => 
-      eds.map(e => {
-        if (e.source === nodeId) {
-          return { ...e, type: 'custom', animated: true };
-        }
-        return e;
-      })
-    );
+    const outputNode = allNodes.find(n => n.id === nodeId);
+    if (!outputNode) return;
 
     setReactFlowNodes(nds => 
       nds.map(n => {
-        if (downstreamNodes.some(dn => dn.id === n.id)) {
-          return {
-            ...n,
-            data: { ...n.data, loading: true },
-          };
+        if (n.id === nodeId) {
+          return { ...n, data: { ...n.data, loading: true } };
         }
         return n;
       })
     );
-    
-    for (const targetNode of downstreamNodes) {
-        try {
-          let result;
-          if (sourceNode.type === 'sprite-sheet-prompt') {
-            result = await generateSpriteSheet({ prompt: JSON.stringify(sourceNode.data.promptData) });
-          } else {
-            result = await generateAssetsFromTextPrompt({ prompt: sourceNode.data.prompt });
+
+    const activeEdges = allEdges.map(e => ({ ...e, type: 'custom', animated: true }));
+    setReactFlowEdges(activeEdges);
+
+    try {
+        const incomers = getIncomers(outputNode, allNodes, allEdges);
+        
+        const characterNode = incomers.find(n => n.data.nodeType === 'character');
+        const animationNode = incomers.find(n => n.data.nodeType === 'animation');
+
+        if (!characterNode || !animationNode) {
+            throw new Error("A Character and an Animation node must be connected to the Output.");
+        }
+
+        const animationIncomers = getIncomers(animationNode, allNodes, allEdges);
+        const stageNodes = animationIncomers.filter(n => n.data.nodeType === 'stage');
+        
+        const frames = [];
+        for (const stageNode of stageNodes) {
+            const frameNodes = getIncomers(stageNode, allNodes, allEdges).filter(n => n.data.nodeType === 'frame');
+            for (const frameNode of frameNodes) {
+                 frames.push({
+                    frame_number: frames.length + 1,
+                    stage: stageNode.data.fields.find((f:any) => f.id === 'stage_number')?.value,
+                    description: frameNode.data.fields.find((f:any) => f.id === 'description')?.value,
+                 });
+            }
+        }
+
+        const promptData = {
+          sprite_sheet: {
+            style: "Pixel art",
+            canvas: {
+              size: "64x64 pixels",
+              background: "transparent",
+              consistency: "same pose alignment, proportions, and framing across all frames"
+            },
+            character: {
+              identity: characterNode.data.fields.find((f:any) => f.id === 'identity').value,
+              base_pose: characterNode.data.fields.find((f:any) => f.id === 'base_pose').value,
+            },
+            animation: {
+              title: animationNode.data.fields.find((f:any) => f.id === 'title').value,
+              stages: stageNodes.map(sn => ({
+                  stage_number: sn.data.fields.find((f:any) => f.id === 'stage_number').value,
+                  label: sn.data.fields.find((f:any) => f.id === 'label').value,
+                  description: sn.data.fields.find((f:any) => f.id === 'description').value,
+              })),
+            },
+            frames,
           }
-    
-          const { assetDataUri } = result;
-          
-          setReactFlowNodes(nds => 
+        };
+
+        const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData) });
+        const { assetDataUri } = result;
+
+        setReactFlowNodes(nds => 
             nds.map(n => {
-              if (n.id === targetNode.id) {
-                 return {
-                  ...n,
-                  data: { ...n.data, image: assetDataUri, loading: false },
-                };
-              }
-              return n;
+                if (n.id === nodeId) {
+                    return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
+                }
+                return n;
             })
-          );
-        } catch (error: any) {
-          console.error("Generation failed:", error);
-          toast({
+        );
+    } catch (error: any) {
+        console.error("Generation failed:", error);
+        toast({
             variant: 'destructive',
             title: "Generation Failed",
             description: error.message || "There was an error generating the asset. Please try again.",
-          });
-          setReactFlowNodes(nds => 
+        });
+        setReactFlowNodes(nds => 
             nds.map(n => {
-              if (n.id === targetNode.id) {
-                return {
-                  ...n,
-                  data: { ...n.data, loading: false },
-                };
-              }
-              return n;
-            })
-          );
-        } finally {
-            setReactFlowEdges(eds => 
-              eds.map(e => {
-                if (e.source === nodeId) {
-                  return { ...e, type: 'default', animated: false };
+                if (n.id === nodeId) {
+                    return { ...n, data: { ...n.data, loading: false } };
                 }
-                return e;
-              })
-            );
-        }
+                return n;
+            })
+        );
+    } finally {
+        const inactiveEdges = allEdges.map(e => ({ ...e, type: 'default', animated: false }));
+        setReactFlowEdges(inactiveEdges);
     }
-  }, [getNodes, setReactFlowNodes, toast, edges, setReactFlowEdges]);
+  }, [getNodes, setReactFlowNodes, toast, getEdges, setReactFlowEdges]);
 
   const handleGenerateGif = useCallback(async (nodeId: string, grid: string) => {
     const allNodes = getNodes();
@@ -241,10 +247,8 @@ function Canvas() {
   }, [getNodes, getEdges, setReactFlowNodes, toast, setReactFlowEdges]);
   
   const nodeTypes: NodeTypes = useMemo(() => ({
-    prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
-    'sprite-sheet-prompt': (props) => <SpriteSheetPromptNode {...props} onGenerate={handleGenerate} />,
-    image: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
-    output: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
+    input: InputNode,
+    output: (props) => <ImageNode {...props} onGenerate={handleGenerate} onGenerateGif={handleGenerateGif} />,
   }), [handleGenerate, handleGenerateGif]);
 
   const edgeTypes: EdgeTypes = useMemo(() => ({
@@ -257,8 +261,8 @@ function Canvas() {
         const newEdge = { ...params };
         const allNodes = getNodes();
         const targetNode = allNodes.find(n => n.id === params.target);
-
-        if (targetNode?.data.label === 'Generate GIF') {
+        
+        if (targetNode?.data.nodeType === 'generate-gif') {
             const sourceNode = allNodes.find(n => n.id === params.source);
             if (sourceNode?.data.image) {
                  setReactFlowNodes(nds => 
@@ -286,84 +290,25 @@ function Canvas() {
     (event: DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData('application/reactflow');
+      const nodeDataString = event.dataTransfer.getData('application/reactflow');
 
-      if (typeof type === 'undefined' || !type || !reactFlowInstance) {
+      if (typeof nodeDataString === 'undefined' || !nodeDataString || !reactFlowInstance) {
         return;
       }
       
+      const { type, nodeType, data } = JSON.parse(nodeDataString);
+
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
 
-      let newNode: Node;
-      
-      switch (type) {
-        case 'prompt':
-          newNode = {
-            id: getId(),
-            type,
-            position,
-            data: { label: 'Text Prompt', prompt: '' },
-          };
-          break;
-        case 'sprite-sheet-prompt':
-            newNode = {
-                id: getId(),
-                type,
-                position,
-                data: { 
-                    label: 'Sprite Sheet Prompt', 
-                    promptData: {
-                      sprite_sheet: {
-                        style: "Pixel art",
-                        canvas: {
-                          size: "64x64 pixels",
-                          background: "transparent",
-                          consistency: "same pose alignment, proportions, and framing across all frames"
-                        },
-                        character: {
-                          identity: "",
-                          base_pose: ""
-                        },
-                        animation: {
-                          title: "",
-                          stages: []
-                        },
-                        frames: []
-                      }
-                    }
-                },
-            };
-            break;
-        case 'sprite-sheet':
-          newNode = {
-            id: getId(),
-            type: 'image',
-            position,
-            data: { label: 'Sprite Sheet', image: null, loading: false },
-          };
-          break;
-         case 'generate-gif':
-            newNode = {
-                id: getId(),
-                type: 'image',
-                position,
-                data: { label: 'Generate GIF', image: null, loading: false },
-            };
-            break;
-        case 'output':
-            newNode = {
-                id: getId(),
-                type: 'output',
-                position,
-                data: { label: 'Output', image: null, loading: false },
-            };
-            break;
-        default:
-            return;
-      }
+      const newNode: Node = {
+        id: getId(),
+        type,
+        position,
+        data: { ...data, nodeType },
+      };
 
       setNodes((nds) => nds.concat(newNode));
     },
