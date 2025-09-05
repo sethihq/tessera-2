@@ -5,8 +5,9 @@ import Image from 'next/image';
 import { Button } from './ui/button';
 import { X } from 'lucide-react';
 import { useCallback } from 'react';
+import { Skeleton } from './ui/skeleton';
 
-export function ImageNode({ data }: { data: { label: string; image?: string } }) {
+export function ImageNode({ data }: { data: { label: string; image?: string; loading?: boolean } }) {
   const { setNodes, setEdges } = useReactFlow();
   const id = useNodeId();
 
@@ -25,7 +26,9 @@ export function ImageNode({ data }: { data: { label: string; image?: string } })
         </Button>
       </CardHeader>
       <CardContent className="min-h-40 flex items-center justify-center">
-        {data.image ? (
+        {data.loading ? (
+          <Skeleton className="w-[250px] h-[250px]" />
+        ) : data.image ? (
           <Image
             src={data.image}
             alt={data.label}
@@ -42,3 +45,5 @@ export function ImageNode({ data }: { data: { label: string; image?: string } })
     </Card>
   );
 }
+
+    

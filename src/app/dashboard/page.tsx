@@ -16,6 +16,8 @@ import ReactFlow, {
   NodeTypes,
   ReactFlowProvider,
   useReactFlow,
+  getConnectedEdges,
+  getOutgoers,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
@@ -27,11 +29,40 @@ import Image from 'next/image';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { generateAssetsFromTextPrompt } from '@/ai/flows/generate-assets-from-text-prompt';
+import { useToast } from '@/hooks/use-toast';
+
 
 const initialNodes: Node[] = [
-  { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node', prompt: 'A medieval castle on a hill' }, type: 'prompt' },
-  { id: '2', position: { x: 100, y: 200 }, data: { label: 'Sprite Sheet' }, type: 'image' },
-  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Output' }, type: 'output' },
+  { 
+    id: '1', 
+    position: { x: 250, y: 5 }, 
+    data: { 
+      label: 'Prompt Node', 
+      prompt: 'A medieval castle on a hill' 
+    }, 
+    type: 'prompt' 
+  },
+  { 
+    id: '2', 
+    position: { x: 100, y: 300 }, 
+    data: { 
+      label: 'Sprite Sheet',
+      image: null,
+      loading: false,
+    }, 
+    type: 'image' 
+  },
+  { 
+    id: '3', 
+    position: { x: 400, y: 300 }, 
+    data: { 
+      label: 'Output',
+      image: null,
+      loading: false, 
+    }, 
+    type: 'output' 
+  },
 ];
 
 const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
@@ -55,12 +86,82 @@ function Canvas() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
+  const { toast } = useToast();
+  const { getNodes, getEdges } = useReactFlow();
   
   const nodeTypes: NodeTypes = useMemo(() => ({
-    prompt: PromptNode,
+    prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
     image: ImageNode,
     output: ImageNode,
-  }), []);
+  }), [handleGenerate]);
+
+  const handleGenerate = useCallback(async (nodeId: string) => {
+    const allNodes = getNodes();
+    const allEdges = getEdges();
+    
+    const promptNode = allNodes.find(n => n.id === nodeId);
+    if (!promptNode) return;
+
+    const connectedEdges = getConnectedEdges([promptNode], allEdges);
+    const downstreamNodes = getOutgoers(promptNode, allNodes, allEdges);
+
+    if (downstreamNodes.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: "Generation Error",
+        description: "Please connect the prompt to an output node.",
+      });
+      return;
+    }
+
+    // Set loading state on downstream nodes
+    setNodes(nds => 
+      nds.map(n => {
+        if (downstreamNodes.some(dn => dn.id === n.id)) {
+          return {
+            ...n,
+            data: { ...n.data, loading: true },
+          };
+        }
+        return n;
+      })
+    );
+    
+    try {
+      const { assetDataUri } = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
+      
+      setNodes(nds => 
+        nds.map(n => {
+          if (downstreamNodes.some(dn => dn.id === n.id)) {
+            return {
+              ...n,
+              data: { ...n.data, image: assetDataUri, loading: false },
+            };
+          }
+          return n;
+        })
+      );
+    } catch (error) {
+      console.error("Generation failed:", error);
+      toast({
+        variant: 'destructive',
+        title: "Generation Failed",
+        description: "There was an error generating the asset. Please try again.",
+      });
+      // Reset loading state on error
+      setNodes(nds => 
+        nds.map(n => {
+          if (downstreamNodes.some(dn => dn.id === n.id)) {
+            return {
+              ...n,
+              data: { ...n.data, loading: false },
+            };
+          }
+          return n;
+        })
+      );
+    }
+  }, [getNodes, getEdges, setNodes, toast]);
 
 
   const onConnect = useCallback(
@@ -104,7 +205,7 @@ function Canvas() {
             id: getId(),
             type: 'image',
             position,
-            data: { label: 'Sprite Sheet' },
+            data: { label: 'Sprite Sheet', image: null, loading: false },
           };
           break;
          case 'generate-gif':
@@ -112,7 +213,7 @@ function Canvas() {
                 id: getId(),
                 type: 'image',
                 position,
-                data: { label: 'Generate GIF' },
+                data: { label: 'Generate GIF', image: null, loading: false },
             };
             break;
         case 'output':
@@ -120,7 +221,7 @@ function Canvas() {
                 id: getId(),
                 type: 'output',
                 position,
-                data: { label: 'Output' },
+                data: { label: 'Output', image: null, loading: false },
             };
             break;
         default:
@@ -251,3 +352,5 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    

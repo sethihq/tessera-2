@@ -2,23 +2,50 @@
 import { useCallback } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 
-export function PromptNode({ data }: { data: { label: string; prompt: string } }) {
-  const { setNodes, setEdges } = useReactFlow();
-  const id = useNodeId();
+interface PromptNodeProps {
+  id: string;
+  data: {
+    label: string;
+    prompt: string;
+  };
+  onGenerate: (nodeId: string) => void;
+}
+
+export function PromptNode({ id, data, onGenerate }: PromptNodeProps) {
+  const { setNodes, setEdges, getNode } = useReactFlow();
+  const nodeId = useNodeId();
 
   const onChange = useCallback((evt: React.ChangeEvent<HTMLTextAreaElement>) => {
-    console.log(evt.target.value);
-  }, []);
+    if (!nodeId) return;
+    const node = getNode(nodeId);
+    if (!node) return;
+    
+    const newNode = {
+      ...node,
+      data: {
+        ...node.data,
+        prompt: evt.target.value,
+      },
+    };
+
+    setNodes(nodes => nodes.map(n => n.id === nodeId ? newNode : n));
+  }, [nodeId, getNode, setNodes]);
 
   const onDelete = useCallback(() => {
-    if (!id) return;
-    setNodes((nodes) => nodes.filter((n) => n.id !== id));
-    setEdges((edges) => edges.filter((e) => e.source !== id && e.target !== id));
-  }, [id, setNodes, setEdges]);
+    if (!nodeId) return;
+    setNodes((nodes) => nodes.filter((n) => n.id !== nodeId));
+    setEdges((edges) => edges.filter((e) => e.source !== nodeId && e.target !== nodeId));
+  }, [nodeId, setNodes, setEdges]);
+
+  const handleGenerateClick = () => {
+    if (nodeId) {
+      onGenerate(nodeId);
+    }
+  };
 
   return (
     <Card className="w-80">
@@ -39,6 +66,14 @@ export function PromptNode({ data }: { data: { label: string; prompt: string } }
         />
         <Handle type="source" position={Position.Bottom} />
       </CardContent>
+      <CardFooter>
+        <Button className="w-full" onClick={handleGenerateClick}>
+          <Sparkles className="mr-2 h-4 w-4" />
+          Generate
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
+
+    
