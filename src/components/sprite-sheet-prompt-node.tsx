@@ -99,7 +99,7 @@ export function SpriteSheetPromptNode({ id, data, onGenerate }: SpriteSheetPromp
         </Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-96 w-full pr-4">
+        <ScrollArea className="h-96 w-full pr-4 nodrag">
           <div className="space-y-4">
             <h4 className="font-semibold">Character</h4>
             <div className="space-y-2">
@@ -170,5 +170,3 @@ export function SpriteSheetPromptNode({ id, data, onGenerate }: SpriteSheetPromp
     </Card>
   );
 }
-
-    
