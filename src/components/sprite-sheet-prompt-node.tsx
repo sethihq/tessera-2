@@ -153,7 +153,6 @@ export function SpriteSheetPromptNode({ id, data, onGenerate }: SpriteSheetPromp
               <div className="space-y-2">
                  <div className="flex items-center justify-between">
                     <h4 className="font-semibold">Frames</h4>
-                    <Button variant="outline" size="sm" onClick={addFrame}><PlusCircle className="mr-2 h-4 w-4" /> Add Frame</Button>
                 </div>
                 {promptData.sprite_sheet.frames.map((frame: any, index: number) => (
                    <div key={index} className="p-2 border rounded-md space-y-2 relative">
@@ -168,7 +167,11 @@ export function SpriteSheetPromptNode({ id, data, onGenerate }: SpriteSheetPromp
         </div>
         <Handle type="source" position={Position.Bottom} />
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-2">
+        <Button variant="outline" className="w-full" onClick={addFrame}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Frame
+        </Button>
         <Button className="w-full" onClick={handleGenerateClick}>
           <Sparkles className="mr-2 h-4 w-4" />
           Generate
