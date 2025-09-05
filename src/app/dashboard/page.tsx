@@ -336,6 +336,7 @@ function Canvas() {
                 className={activeTool === 'pan' ? 'cursor-grab' : ''}
                 proOptions={proOptions}
             >
+                <Background />
                  <defs>
                     <linearGradient id="animated-gradient-url" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" style={{stopColor: 'hsl(var(--primary))', stopOpacity: 1}} />
