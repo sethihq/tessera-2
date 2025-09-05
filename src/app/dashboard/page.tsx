@@ -13,6 +13,8 @@ import ReactFlow, {
   Node,
   NodeTypes,
   ReactFlowProvider,
+  useReactFlow,
+  getConnectedEdges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Folder } from "lucide-react";
@@ -47,6 +49,7 @@ function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const { getNodes, getEdges } = useReactFlow();
 
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: PromptNode,
@@ -124,6 +127,24 @@ function Canvas() {
     [reactFlowInstance, setNodes]
   );
 
+  const onDelete = useCallback(
+    (nodesToRemove: Node[], edgesToRemove: Edge[]) => {
+      const nodeIdsToRemove = new Set(nodesToRemove.map(n => n.id));
+      const allEdges = getEdges();
+      const allNodes = getNodes();
+
+      const connectedEdges = allEdges.filter(edge => 
+        nodeIdsToRemove.has(edge.source) || nodeIdsToRemove.has(edge.target)
+      );
+
+      const edgeIdsToRemove = new Set([...edgesToRemove, ...connectedEdges].map(e => e.id));
+
+      setNodes(allNodes.filter(n => !nodeIdsToRemove.has(n.id)));
+      setEdges(allEdges.filter(e => !edgeIdsToRemove.has(e.id)));
+    },
+    [getNodes, getEdges, setNodes, setEdges]
+  );
+
   return (
     <div className="flex h-full">
         <NodesSidebar />
@@ -138,6 +159,7 @@ function Canvas() {
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
+                onDelete={onDelete}
                 fitView
             >
                 <Background />
