@@ -12,11 +12,13 @@ import ReactFlow, {
   Edge,
   Node,
   NodeTypes,
+  ReactFlowProvider,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
 import { PromptNode } from '@/components/prompt-node';
 import { ImageNode } from '@/components/image-node';
+import { FloatingControls } from '@/components/floating-controls';
 
 const initialNodes: Node[] = [
   { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node', prompt: 'A medieval castle on a hill' }, type: 'prompt' },
@@ -40,7 +42,7 @@ const nodeColor = (node: Node) => {
 let id = 4;
 const getId = () => `${id++}`;
 
-export default function CanvasPage() {
+function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -139,10 +141,18 @@ export default function CanvasPage() {
                 fitView
             >
                 <Background />
-                <Controls />
                 <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable />
+                <FloatingControls />
             </ReactFlow>
         </div>
     </div>
   );
+}
+
+export default function CanvasPage() {
+    return (
+        <ReactFlowProvider>
+            <Canvas />
+        </ReactFlowProvider>
+    )
 }
