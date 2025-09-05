@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, DragEvent, useMemo, Suspense } from 'react';
@@ -16,9 +17,10 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
   getConnectedEdges,
+  OnNodesDelete,
+  OnEdgesDelete,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Folder, File } from "lucide-react";
 import { NodesSidebar } from '@/components/nodes-sidebar';
 import { PromptNode } from '@/components/prompt-node';
 import { ImageNode } from '@/components/image-node';
@@ -55,8 +57,7 @@ function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-  const { getNodes, getEdges } = useReactFlow();
-
+  
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: PromptNode,
     image: ImageNode,
@@ -133,22 +134,19 @@ function Canvas() {
     [reactFlowInstance, setNodes]
   );
 
-  const onDelete = useCallback(
-    (nodesToRemove: Node[], edgesToRemove: Edge[]) => {
-      const nodeIdsToRemove = new Set(nodesToRemove.map(n => n.id));
-      const allEdges = getEdges();
-      const allNodes = getNodes();
-
-      const connectedEdges = allEdges.filter(edge => 
-        nodeIdsToRemove.has(edge.source) || nodeIdsToRemove.has(edge.target)
+  const onNodesDelete: OnNodesDelete = useCallback(
+    (deleted) => {
+      setEdges(
+        deleted.reduce((acc, node) => {
+          const incomers = getConnectedEdges([node], edges).filter((edge) => edge.target === node.id);
+          const outgoers = getConnectedEdges([node], edges).filter((edge) => edge.source === node.id);
+          const connectedEdges = [...incomers, ...outgoers];
+          const edgeIds = connectedEdges.map((edge) => edge.id);
+          return acc.filter((edge) => !edgeIds.includes(edge.id));
+        }, edges)
       );
-
-      const edgeIdsToRemove = new Set([...edgesToRemove, ...connectedEdges].map(e => e.id));
-
-      setNodes(allNodes.filter(n => !nodeIdsToRemove.has(n.id)));
-      setEdges(allEdges.filter(e => !edgeIdsToRemove.has(e.id)));
     },
-    [getNodes, getEdges, setNodes, setEdges]
+    [nodes, edges]
   );
 
   return (
@@ -161,11 +159,11 @@ function Canvas() {
                 nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                onNodesDelete={onNodesDelete}
                 onConnect={onConnect}
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
-                onDelete={onDelete}
                 fitView
             >
                 <Background />
