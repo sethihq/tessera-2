@@ -1,69 +1,146 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { EditorPanel } from "@/components/editor-panel";
-import { GenerationProvider } from "@/context/generation-context";
+  Home,
+  Settings,
+  LifeBuoy,
+  Folder,
+  File,
+  Plus,
+} from "lucide-react";
 import { TesseraLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Home, Settings, LifeBuoy } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard-header";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <GenerationProvider>
-      <div className="flex h-dvh bg-muted/20">
-        <Sidebar className="w-80 border-r shrink-0">
-          <SidebarHeader className="p-4 border-b">
-            <div className="flex items-center gap-3">
-              <TesseraLogo className="size-8" />
-              <h1 className="text-xl font-semibold tracking-tight">Tessera</h1>
-            </div>
-          </SidebarHeader>
-          <SidebarContent>
-            <ScrollArea className="h-full">
-              <EditorPanel />
-            </ScrollArea>
-          </SidebarContent>
-          <SidebarFooter className="p-4 mt-auto border-t">
-            <div className="flex flex-col gap-2">
-                <Button variant="ghost" className="justify-start gap-2">
-                    <Home />
-                    <span>Home</span>
+    <div className="grid h-screen w-full pl-[56px]">
+      <aside className="inset-y fixed left-0 z-20 flex h-full flex-col border-r">
+        <div className="border-b p-2">
+          <Button variant="outline" size="icon" aria-label="Home">
+            <TesseraLogo className="size-5 fill-foreground" />
+          </Button>
+        </div>
+        <nav className="grid gap-1 p-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-lg bg-muted"
+                  aria-label="Projects"
+                >
+                  <Folder />
                 </Button>
-                <Button variant="ghost" className="justify-start gap-2">
-                    <Settings />
-                    <span>Settings</span>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={5}>
+                Projects
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-lg"
+                  aria-label="Settings"
+                >
+                  <Settings />
                 </Button>
-                <Button variant="ghost" className="justify-start gap-2">
-                    <LifeBuoy />
-                    <span>Help</span>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={5}>
+                Settings
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </nav>
+        <nav className="mt-auto grid gap-1 p-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-lg"
+                  aria-label="Help"
+                >
+                  <LifeBuoy />
                 </Button>
-            </div>
-            <div className="flex items-center gap-3 pt-4 mt-4 border-t">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src="https://picsum.photos/100" alt="User avatar" data-ai-hint="user avatar" />
-                <AvatarFallback>DV</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Solo Dev</span>
-                <span className="text-xs text-muted-foreground">Pro Plan</span>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={5}>
+                Help
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Avatar className="h-9 w-9">
+                  <AvatarImage
+                    src="https://picsum.photos/100"
+                    alt="User avatar"
+                    data-ai-hint="user avatar"
+                  />
+                  <AvatarFallback>DV</AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={5}>
+                Account
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </nav>
+      </aside>
+      <div className="flex flex-col">
+        <DashboardHeader />
+        <main className="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="relative hidden flex-col items-start gap-8 md:flex">
+            <div className="grid w-full gap-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Projects
+                </h2>
+                <Button size="sm">
+                  <Plus className="mr-2" /> New Project
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button variant="ghost" className="justify-start gap-3">
+                  <Folder /> My Game
+                </Button>
+                <Link href="/dashboard/canvas">
+                  <Button variant="ghost" className="justify-start gap-3 pl-11 w-full">
+                    <File /> Main Scene
+                  </Button>
+                </Link>
+                <Button variant="ghost" className="justify-start gap-3 pl-11">
+                  <File /> Character Sprites
+                </Button>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button variant="ghost" className="justify-start gap-3">
+                  <Folder /> Platformer Kit
+                </Button>
+                 <Button variant="ghost" className="justify-start gap-3 pl-11">
+                    <File /> Tileset
+                  </Button>
+                  <Button variant="ghost" className="justify-start gap-3 pl-11">
+                    <File /> Player Controller
+                  </Button>
               </div>
             </div>
-          </SidebarFooter>
-        </Sidebar>
-        <div className="flex flex-col flex-1">
-          <DashboardHeader />
-          <main className="flex-1 overflow-auto">
+          </div>
+          <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
             {children}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </GenerationProvider>
+    </div>
   );
 }
