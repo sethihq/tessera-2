@@ -70,29 +70,26 @@ function Canvas() {
       })
     );
     
-    // Animate edges connected to the output node
-    const edgesToAnimate = allEdges.filter(e => e.target === nodeId || e.source === nodeId);
-    const animatedEdgeIds = new Set(edgesToAnimate.map(e => e.id));
+    const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
     setReactFlowEdges(eds => 
-      eds.map(e => e.target === nodeId ? { ...e, type: 'custom', animated: true } : e)
+      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'custom', animated: true } : e)
     );
 
     try {
         const outputIncomers = getIncomers(outputNode, allNodes, allEdges);
-        const animationNode = outputIncomers.find(n => n.data.nodeType === 'animation');
-
-        if (!animationNode) {
-            throw new Error("An Animation node must be connected to the Output node.");
-        }
-        
-        const animationIncomers = getIncomers(animationNode, allNodes, allEdges);
-        const characterNode = animationIncomers.find(n => n.data.nodeType === 'character');
+        const characterNode = outputIncomers.find(n => n.data.nodeType === 'character');
 
         if (!characterNode) {
-            throw new Error("A Character node must be connected to the Animation node.");
+            throw new Error("A Character node must be connected to the Output node.");
+        }
+        
+        const characterOutgoers = getOutgoers(characterNode, allNodes, allEdges);
+        const animationNode = characterOutgoers.find(n => n.data.nodeType === 'animation');
+
+        if (!animationNode) {
+            throw new Error("An Animation node must be connected from the Character node.");
         }
 
-        // Find stages connected FROM the animation node
         const animationOutgoers = getOutgoers(animationNode, allNodes, allEdges);
         const stageNodes = animationOutgoers.filter(n => n.data.nodeType === 'stage');
 
@@ -102,7 +99,6 @@ function Canvas() {
         
         const frames = [];
         for (const stageNode of stageNodes) {
-            // Find frames connected FROM the stage node
             const stageOutgoers = getOutgoers(stageNode, allNodes, allEdges);
             const frameNodes = stageOutgoers.filter(n => n.data.nodeType === 'frame');
             
@@ -171,7 +167,7 @@ function Canvas() {
         );
     } finally {
         setReactFlowEdges(eds => 
-            eds.map(e => e.target === nodeId ? { ...e, type: 'default', animated: false } : e)
+            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'default', animated: false } : e)
         );
     }
   }, [getNodes, setReactFlowNodes, toast, getEdges, setReactFlowEdges]);
@@ -492,3 +488,5 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    
