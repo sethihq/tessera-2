@@ -1,3 +1,4 @@
+
 'use client';
 import { useCallback } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
@@ -75,5 +76,3 @@ export function PromptNode({ id, data, onGenerate }: PromptNodeProps) {
     </Card>
   );
 }
-
-    

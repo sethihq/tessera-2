@@ -1,3 +1,4 @@
+
 'use client';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,5 +46,3 @@ export function ImageNode({ data }: { data: { label: string; image?: string; loa
     </Card>
   );
 }
-
-    
