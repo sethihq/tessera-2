@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, ImageIcon, MoveRight, Scissors } from 'lucide-react';
+import { Workflow, Text, ImageIcon, MoveRight, Scissors, FileText } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 export function NodesSidebar() {
@@ -23,14 +24,24 @@ export function NodesSidebar() {
               Input Nodes
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             <Button 
               variant="outline" 
               className="w-full justify-start"
               onDragStart={(event) => onDragStart(event, 'prompt')}
               draggable
             >
-              Prompt
+              <Text className="mr-2 h-4 w-4" />
+              Text Prompt
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onDragStart={(event) => onDragStart(event, 'sprite-sheet-prompt')}
+              draggable
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Sprite Sheet Prompt
             </Button>
           </CardContent>
         </Card>

@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useState, useCallback, DragEvent, useMemo, Suspense } from 'react';
@@ -21,6 +22,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
 import { PromptNode } from '@/components/prompt-node';
+import { SpriteSheetPromptNode } from '@/components/sprite-sheet-prompt-node';
 import { ImageNode } from '@/components/image-node';
 import { FloatingControls, type Tool } from '@/components/floating-controls';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,10 +88,10 @@ function Canvas() {
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
     
-    const promptNode = allNodes.find(n => n.id === nodeId);
-    if (!promptNode) return;
+    const sourceNode = allNodes.find(n => n.id === nodeId);
+    if (!sourceNode) return;
 
-    const downstreamNodes = getOutgoers(promptNode, allNodes, edges);
+    const downstreamNodes = getOutgoers(sourceNode, allNodes, edges);
 
     if (downstreamNodes.length === 0) {
       toast({
@@ -114,13 +116,11 @@ function Canvas() {
     
     for (const targetNode of downstreamNodes) {
         try {
-          const isSpriteSheet = targetNode.data.label === 'Sprite Sheet';
-          
           let result;
-          if (isSpriteSheet) {
-            result = await generateSpriteSheet({ prompt: promptNode.data.prompt });
+          if (sourceNode.type === 'sprite-sheet-prompt') {
+            result = await generateSpriteSheet({ prompt: JSON.stringify(sourceNode.data.promptData) });
           } else {
-            result = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
+            result = await generateAssetsFromTextPrompt({ prompt: sourceNode.data.prompt });
           }
     
           const { assetDataUri } = result;
@@ -234,6 +234,7 @@ function Canvas() {
   
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
+    'sprite-sheet-prompt': (props) => <SpriteSheetPromptNode {...props} onGenerate={handleGenerate} />,
     image: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
     output: (props) => <ImageNode {...props} onGenerateGif={handleGenerateGif} />,
   }), [handleGenerate, handleGenerateGif]);
@@ -292,9 +293,38 @@ function Canvas() {
             id: getId(),
             type,
             position,
-            data: { label: 'Prompt Node', prompt: '' },
+            data: { label: 'Text Prompt', prompt: '' },
           };
           break;
+        case 'sprite-sheet-prompt':
+            newNode = {
+                id: getId(),
+                type,
+                position,
+                data: { 
+                    label: 'Sprite Sheet Prompt', 
+                    promptData: {
+                      sprite_sheet: {
+                        style: "Pixel art",
+                        canvas: {
+                          size: "64x64 pixels",
+                          background: "transparent",
+                          consistency: "same pose alignment, proportions, and framing across all frames"
+                        },
+                        character: {
+                          identity: "",
+                          base_pose: ""
+                        },
+                        animation: {
+                          title: "",
+                          stages: []
+                        },
+                        frames: []
+                      }
+                    }
+                },
+            };
+            break;
         case 'sprite-sheet':
           newNode = {
             id: getId(),
@@ -475,5 +505,7 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    
 
     
