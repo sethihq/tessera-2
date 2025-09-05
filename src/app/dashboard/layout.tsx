@@ -1,5 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { Suspense } from 'react';
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Folder,
   File,
@@ -11,7 +15,21 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/dashboard-header";
 
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+function DashboardLayoutContent({ children }: { children: ReactNode }) {
+  const searchParams = useSearchParams();
+  const fileOpen = searchParams.get('file');
+
+  if (fileOpen) {
+    return (
+       <div className="flex flex-col h-dvh">
+        <DashboardHeader />
+        <main className="flex-1">
+            {children}
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="grid h-dvh w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/40 md:block">
@@ -36,7 +54,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Button variant="ghost" className="justify-start gap-3">
                   <Folder /> My Game
                 </Button>
-                {/* The link will be handled by the page now */}
                 <Button variant="ghost" className="justify-start gap-3 pl-11 w-full" asChild>
                   <Link href="/dashboard?file=main-scene"><File /> Main Scene</Link>
                 </Button>
@@ -77,7 +94,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-col">
+       <div className="flex flex-col">
         <DashboardHeader />
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
             {children}
@@ -85,4 +102,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </div>
     </div>
   );
+}
+
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
+  )
 }

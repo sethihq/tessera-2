@@ -2,7 +2,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "./ui/button";
-import { Share2 } from "lucide-react";
+import { Share2, Home } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,15 +20,14 @@ export function DashboardHeader() {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex items-center gap-2">
       {fileOpen && (
+        <>
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/dashboard"><Home/></Link>
+        </Button>
         <Breadcrumb className="hidden md:flex">
           <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/dashboard">Projects</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
             <BreadcrumbItem>
                <BreadcrumbLink asChild>
                 <Link href="/dashboard">My Game</Link>
@@ -40,7 +39,9 @@ export function DashboardHeader() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        </>
       )}
+      </div>
       <div className="flex-1" />
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm">
