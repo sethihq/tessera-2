@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, DragEvent, useMemo, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ReactFlow, {
   Background,
@@ -17,11 +18,16 @@ import ReactFlow, {
   getConnectedEdges,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Folder } from "lucide-react";
+import { Folder, File } from "lucide-react";
 import { NodesSidebar } from '@/components/nodes-sidebar';
 import { PromptNode } from '@/components/prompt-node';
 import { ImageNode } from '@/components/image-node';
 import { FloatingControls } from '@/components/floating-controls';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const initialNodes: Node[] = [
   { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node', prompt: 'A medieval castle on a hill' }, type: 'prompt' },
@@ -171,6 +177,41 @@ function Canvas() {
   );
 }
 
+const projects = [
+    {
+        name: 'Main Scene',
+        project: 'My Game',
+        href: '/dashboard?file=main-scene',
+        image: 'https://picsum.photos/800/600',
+        image_hint: 'game level',
+        lastUpdated: '2 hours ago',
+    },
+    {
+        name: 'Character Sprites',
+        project: 'My Game',
+        href: '#',
+        image: 'https://picsum.photos/800/600',
+        image_hint: 'character sprite sheet',
+        lastUpdated: '5 hours ago',
+    },
+    {
+        name: 'Tileset',
+        project: 'Platformer Kit',
+        href: '#',
+        image: 'https://picsum.photos/800/600',
+        image_hint: 'game tileset',
+        lastUpdated: '1 day ago',
+    },
+    {
+        name: 'Player Controller',
+        project: 'Platformer Kit',
+        href: '#',
+        image: 'https://picsum.photos/800/600',
+        image_hint: 'game character',
+        lastUpdated: '3 days ago',
+    },
+]
+
 function DashboardPageContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get('file');
@@ -184,16 +225,38 @@ function DashboardPageContent() {
   }
 
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center">
-        <div className="flex items-center justify-center w-20 h-20 rounded-full bg-background mb-6 mx-auto">
-          <Folder className="w-10 h-10 text-muted-foreground" />
+     <div>
+        <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-semibold">Projects</h1>
+            <Button>
+                New Project
+            </Button>
         </div>
-        <h2 className="text-2xl font-semibold tracking-tight">Select a file</h2>
-        <p className="text-muted-foreground mt-2 max-w-sm">
-          Choose a file from the project list on the left to start editing on the canvas.
-        </p>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {projects.map((item, index) => (
+                <Link href={item.href} key={index}>
+                    <Card className="overflow-hidden transition-all hover:shadow-lg">
+                        <AspectRatio ratio={16/9}>
+                            <Image 
+                                src={item.image} 
+                                alt={item.name} 
+                                fill
+                                className="object-cover"
+                                data-ai-hint={item.image_hint}
+                            />
+                        </AspectRatio>
+                        <CardHeader>
+                            <CardTitle>{item.name}</CardTitle>
+                            <CardDescription>{item.project}</CardDescription>
+                        </CardHeader>
+                        <CardFooter className="flex justify-between items-center text-sm text-muted-foreground">
+                            <span>Updated {item.lastUpdated}</span>
+                            <Badge variant="secondary">{item.project === 'My Game' ? 'Personal' : 'Kit'}</Badge>
+                        </CardFooter>
+                    </Card>
+                </Link>
+            ))}
+        </div>
     </div>
   );
 }
