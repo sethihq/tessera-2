@@ -342,7 +342,7 @@ function Canvas() {
                         <stop offset="100%" style={{stopColor: 'hsl(var(--accent-foreground))', stopOpacity: 1}} />
                     </linearGradient>
                 </defs>
-                <Background />
+                
                 <FloatingControls activeTool={activeTool} onToolChange={setActiveTool} />
             </ReactFlow>
         </div>
