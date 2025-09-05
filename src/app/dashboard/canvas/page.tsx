@@ -3,6 +3,7 @@
 import React from 'react';
 import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { NodesSidebar } from '@/components/nodes-sidebar';
 
 const initialNodes = [
   { id: '1', position: { x: 250, y: 5 }, data: { label: 'Prompt Node' }, type: 'input' },
@@ -25,16 +26,19 @@ const nodeColor = (node) => {
 
 export default function CanvasPage() {
   return (
-    <div style={{ height: '100%', width: '100%' }} className="rounded-xl overflow-hidden">
-      <ReactFlow
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
-        fitView
-      >
-        <Background />
-        <Controls />
-        <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable />
-      </ReactFlow>
+    <div className="flex h-full">
+        <NodesSidebar />
+        <div className="flex-1 h-full">
+            <ReactFlow
+                initialNodes={initialNodes}
+                initialEdges={initialEdges}
+                fitView
+            >
+                <Background />
+                <Controls />
+                <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable />
+            </ReactFlow>
+        </div>
     </div>
   );
 }
