@@ -9,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { extractWorldStyle, type ExtractWorldStyleOutput } from './extract-world-style-from-reference-art';
+import { type ExtractWorldStyleOutput } from './extract-world-style-from-reference-art';
 
 const GenerateAssetsFromVisualGuideInputSchema = z.object({
   worldStyle: z.any().describe("The World Style object to use for asset generation."),
@@ -59,7 +59,7 @@ const generateAssetsFromVisualGuideFlow = ai.defineFlow(
     `;
 
     const {media} = await ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
+        model: 'googleai/gemini-2.5-flash-image-preview',
         prompt: [
             {media: {url: input.visualGuideDataUri}},
             {text: generationPrompt},
