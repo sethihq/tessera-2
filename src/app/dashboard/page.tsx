@@ -28,6 +28,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generateAssetsFromTextPrompt } from '@/ai/flows/generate-assets-from-text-prompt';
+import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -110,12 +111,23 @@ function Canvas() {
     );
     
     try {
-      const { assetDataUri } = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
+      // Check if any downstream node is a sprite sheet to decide which flow to call
+      const isSpriteSheet = downstreamNodes.some(n => n.data.label === 'Sprite Sheet');
+      
+      let result;
+      if (isSpriteSheet) {
+        result = await generateSpriteSheet({ prompt: promptNode.data.prompt });
+      } else {
+        result = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
+      }
+
+      const { assetDataUri } = result;
       
       setReactFlowNodes(nds => 
         nds.map(n => {
+          // Update only the nodes connected to this prompt
           if (downstreamNodes.some(dn => dn.id === n.id)) {
-            return {
+             return {
               ...n,
               data: { ...n.data, image: assetDataUri, loading: false },
             };
@@ -123,12 +135,12 @@ function Canvas() {
           return n;
         })
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Generation failed:", error);
       toast({
         variant: 'destructive',
         title: "Generation Failed",
-        description: "There was an error generating the asset. Please try again.",
+        description: error.message || "There was an error generating the asset. Please try again.",
       });
       setReactFlowNodes(nds => 
         nds.map(n => {
