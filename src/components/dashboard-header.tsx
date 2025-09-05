@@ -2,7 +2,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "./ui/button";
-import { Share2, Folder, File } from "lucide-react";
+import { Share2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,15 +12,15 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 export function DashboardHeader() {
-  const pathname = usePathname();
-  const isCanvas = pathname.includes('/canvas');
+  const searchParams = useSearchParams();
+  const fileOpen = searchParams.get('file');
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      {isCanvas && (
+      {fileOpen && (
         <Breadcrumb className="hidden md:flex">
           <BreadcrumbList>
             <BreadcrumbItem>
