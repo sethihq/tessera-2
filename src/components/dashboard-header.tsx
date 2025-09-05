@@ -21,13 +21,13 @@ export function DashboardHeader() {
   const fileOpen = searchParams.get('file');
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
       {fileOpen ? (
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/dashboard"><Home/></Link>
+            <Link href="/dashboard"><Home className="h-4 w-4"/></Link>
           </Button>
-          <Breadcrumb className="hidden md:flex">
+          <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                  <BreadcrumbLink asChild>
@@ -54,7 +54,7 @@ export function DashboardHeader() {
           />
         </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm">
+        <Button variant="outline">
           <Share2 className="mr-2 h-4 w-4" />
           Share
         </Button>
