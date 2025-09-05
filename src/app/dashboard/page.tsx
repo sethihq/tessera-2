@@ -16,9 +16,6 @@ import ReactFlow, {
   NodeTypes,
   ReactFlowProvider,
   useReactFlow,
-  getConnectedEdges,
-  OnNodesDelete,
-  OnEdgesDelete,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
@@ -135,26 +132,6 @@ function Canvas() {
     [reactFlowInstance, setNodes]
   );
 
-  const onNodesDelete: OnNodesDelete = useCallback(
-    (deleted) => {
-      setEdges(
-        deleted.reduce((acc, node) => {
-          const connectedEdges = getConnectedEdges([node], edges);
-          const edgeIds = new Set(connectedEdges.map((edge) => edge.id));
-          return acc.filter((edge) => !edgeIds.has(edge.id));
-        }, edges)
-      );
-    },
-    [edges, setEdges]
-  );
-
-  const onEdgesDelete: OnEdgesDelete = useCallback(
-    (deleted) => {
-      setEdges(deleted.reduce((acc, edge) => acc.filter(e => e.id !== edge.id), edges));
-    },
-    [edges, setEdges]
-  );
-
   return (
     <div className="flex h-full">
         <NodesSidebar />
@@ -165,8 +142,6 @@ function Canvas() {
                 nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                onNodesDelete={onNodesDelete}
-                onEdgesDelete={onEdgesDelete}
                 onConnect={onConnect}
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
