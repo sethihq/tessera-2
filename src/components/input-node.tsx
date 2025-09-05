@@ -20,6 +20,7 @@ interface InputNodeProps {
   id: string;
   data: {
     label: string;
+    nodeType: string;
     fields: Field[];
   };
 }
@@ -81,8 +82,18 @@ export function InputNode({ id, data }: InputNodeProps) {
             )}
           </div>
         ))}
-        <Handle type="source" position={Position.Bottom} />
-        <Handle type="target" position={Position.Top} />
+        {data.nodeType === 'animation' ? (
+          <>
+            <Handle type="target" position={Position.Left} />
+            <Handle type="source" position={Position.Right} />
+            <Handle type="source" position={Position.Bottom} />
+          </>
+        ) : (
+          <>
+            <Handle type="source" position={Position.Bottom} />
+            <Handle type="target" position={Position.Top} />
+          </>
+        )}
       </CardContent>
     </Card>
   );
