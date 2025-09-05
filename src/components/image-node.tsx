@@ -16,7 +16,7 @@ interface ImageNodeProps {
   id: string;
   data: { 
     label: string; 
-    nodeType: 'output' | 'generate-gif';
+    nodeType: 'asset-generator' | 'generate-gif';
     image?: string; 
     loading?: boolean;
     sourceImage?: string;
@@ -56,7 +56,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
 
   const handleGenerateClick = () => {
     if (nodeId) {
-      if(data.nodeType === 'output') {
+      if(data.nodeType === 'asset-generator') {
         onGenerate(nodeId);
       } else {
         onGenerateGif(nodeId, gridSize);
@@ -65,6 +65,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   };
   
   const isGifNode = data.nodeType === 'generate-gif';
+  const isGeneratorNode = data.nodeType === 'asset-generator';
 
   return (
     <Card className={`w-80 ${isTarget ? 'border-primary' : ''}`}>
@@ -95,7 +96,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
           />
         ) : (
           <div className="text-muted-foreground text-sm">
-            {isGifNode ? 'Connect an image to generate a GIF' : 'Connect inputs to generate'}
+            {isGifNode ? 'Connect an image to generate a GIF' : 'Connect an Animation to generate'}
           </div>
         )}
 
@@ -118,9 +119,9 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} />
       </CardContent>
-       {(isGifNode && (sourceNodeImage || data.image)) || data.nodeType === 'output' && (
+       {(isGifNode && sourceNodeImage) || isGeneratorNode && (
         <CardFooter>
-          <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading}>
+          <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
             {isGifNode ? <Scissors className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
             {isGifNode ? 'Generate GIF' : 'Generate'}
           </Button>

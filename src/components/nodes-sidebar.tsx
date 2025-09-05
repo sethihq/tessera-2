@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, ImageIcon, MoveRight, Scissors, FileText, User, Bot, Layers, Frame } from 'lucide-react';
+import { Workflow, Text, ImageIcon, Scissors, User, Bot, Layers, Frame } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 const legoBlocks = {
@@ -58,16 +58,16 @@ const legoBlocks = {
   ],
   outputs: [
       { 
+        label: 'Asset Generator', 
+        nodeType: 'asset-generator', 
+        icon: Workflow,
+        data: { label: 'Asset Generator', image: null, loading: false }
+      },
+      { 
         label: 'Generate GIF', 
         nodeType: 'generate-gif', 
         icon: Scissors,
         data: { label: 'Generate GIF', image: null, loading: false }
-      },
-      { 
-        label: 'Output', 
-        nodeType: 'output', 
-        icon: MoveRight,
-        data: { label: 'Output', image: null, loading: false }
       },
   ]
 };

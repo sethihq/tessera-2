@@ -18,6 +18,7 @@ import ReactFlow, {
   useReactFlow,
   getIncomers,
   getOutgoers,
+  getConnectedEdges,
   EdgeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -58,16 +59,11 @@ function Canvas() {
     const allNodes = getNodes();
     const allEdges = getEdges();
     
-    const outputNode = allNodes.find(n => n.id === nodeId);
-    if (!outputNode) return;
+    const generatorNode = allNodes.find(n => n.id === nodeId);
+    if (!generatorNode) return;
 
     setReactFlowNodes(nds => 
-      nds.map(n => {
-        if (n.id === nodeId) {
-          return { ...n, data: { ...n.data, loading: true } };
-        }
-        return n;
-      })
+      nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: true } } : n)
     );
     
     const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
@@ -76,11 +72,11 @@ function Canvas() {
     );
 
     try {
-        const outputIncomers = getIncomers(outputNode, allNodes, allEdges);
-        const animationNode = outputIncomers.find(n => n.data.nodeType === 'animation');
+        const generatorIncomers = getIncomers(generatorNode, allNodes, allEdges);
+        const animationNode = generatorIncomers.find(n => n.data.nodeType === 'animation');
 
         if (!animationNode) {
-            throw new Error("An Animation node must be connected to the Output node.");
+            throw new Error("An Animation node must be connected to the Asset Generator node.");
         }
         
         const characterNode = getIncomers(animationNode, allNodes, allEdges).find(n => n.data.nodeType === 'character');
@@ -486,5 +482,3 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
-
-    
