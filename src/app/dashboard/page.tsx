@@ -140,8 +140,8 @@ function Canvas() {
       setEdges(
         deleted.reduce((acc, node) => {
           const connectedEdges = getConnectedEdges([node], edges);
-          const edgeIds = connectedEdges.map((edge) => edge.id);
-          return acc.filter((edge) => !edgeIds.includes(edge.id));
+          const edgeIds = new Set(connectedEdges.map((edge) => edge.id));
+          return acc.filter((edge) => !edgeIds.has(edge.id));
         }, edges)
       );
     },
@@ -150,7 +150,7 @@ function Canvas() {
 
   const onEdgesDelete: OnEdgesDelete = useCallback(
     (deleted) => {
-      setEdges(edges.filter((edge) => !deleted.includes(edge)));
+      setEdges(deleted.reduce((acc, edge) => acc.filter(e => e.id !== edge.id), edges));
     },
     [edges, setEdges]
   );
