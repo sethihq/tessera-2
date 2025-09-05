@@ -110,49 +110,49 @@ function Canvas() {
       })
     );
     
-    try {
-      // Check if any downstream node is a sprite sheet to decide which flow to call
-      const isSpriteSheet = downstreamNodes.some(n => n.data.label === 'Sprite Sheet');
-      
-      let result;
-      if (isSpriteSheet) {
-        result = await generateSpriteSheet({ prompt: promptNode.data.prompt });
-      } else {
-        result = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
-      }
-
-      const { assetDataUri } = result;
-      
-      setReactFlowNodes(nds => 
-        nds.map(n => {
-          // Update only the nodes connected to this prompt
-          if (downstreamNodes.some(dn => dn.id === n.id)) {
-             return {
-              ...n,
-              data: { ...n.data, image: assetDataUri, loading: false },
-            };
+    for (const targetNode of downstreamNodes) {
+        try {
+          const isSpriteSheet = targetNode.data.label === 'Sprite Sheet';
+          
+          let result;
+          if (isSpriteSheet) {
+            result = await generateSpriteSheet({ prompt: promptNode.data.prompt });
+          } else {
+            result = await generateAssetsFromTextPrompt({ prompt: promptNode.data.prompt });
           }
-          return n;
-        })
-      );
-    } catch (error: any) {
-      console.error("Generation failed:", error);
-      toast({
-        variant: 'destructive',
-        title: "Generation Failed",
-        description: error.message || "There was an error generating the asset. Please try again.",
-      });
-      setReactFlowNodes(nds => 
-        nds.map(n => {
-          if (downstreamNodes.some(dn => dn.id === n.id)) {
-            return {
-              ...n,
-              data: { ...n.data, loading: false },
-            };
-          }
-          return n;
-        })
-      );
+    
+          const { assetDataUri } = result;
+          
+          setReactFlowNodes(nds => 
+            nds.map(n => {
+              if (n.id === targetNode.id) {
+                 return {
+                  ...n,
+                  data: { ...n.data, image: assetDataUri, loading: false },
+                };
+              }
+              return n;
+            })
+          );
+        } catch (error: any) {
+          console.error("Generation failed:", error);
+          toast({
+            variant: 'destructive',
+            title: "Generation Failed",
+            description: error.message || "There was an error generating the asset. Please try again.",
+          });
+          setReactFlowNodes(nds => 
+            nds.map(n => {
+              if (n.id === targetNode.id) {
+                return {
+                  ...n,
+                  data: { ...n.data, loading: false },
+                };
+              }
+              return n;
+            })
+          );
+        }
     }
   }, [getNodes, setReactFlowNodes, toast, edges]);
   
@@ -379,3 +379,5 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    

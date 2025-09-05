@@ -46,3 +46,5 @@ export function ImageNode({ data }: { data: { label: string; image?: string; loa
     </Card>
   );
 }
+
+    
