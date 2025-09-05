@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ReactFlow, {
   Background,
-  MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -67,16 +66,7 @@ const initialNodes: Node[] = [
 
 const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
 
-const nodeColor = (node: Node) => {
-    switch (node.type) {
-      case 'prompt':
-        return '#6ede87';
-      case 'output':
-        return '#6865A5';
-      default:
-        return '#ff0072';
-    }
-  };
+const proOptions = { hideAttribution: true };
 
 let id = 4;
 const getId = () => `${id++}`;
@@ -88,12 +78,6 @@ function Canvas() {
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
   const { getNodes, getEdges } = useReactFlow();
-  
-  const nodeTypes: NodeTypes = useMemo(() => ({
-    prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
-    image: ImageNode,
-    output: ImageNode,
-  }), [handleGenerate]);
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
@@ -102,7 +86,6 @@ function Canvas() {
     const promptNode = allNodes.find(n => n.id === nodeId);
     if (!promptNode) return;
 
-    const connectedEdges = getConnectedEdges([promptNode], allEdges);
     const downstreamNodes = getOutgoers(promptNode, allNodes, allEdges);
 
     if (downstreamNodes.length === 0) {
@@ -162,6 +145,12 @@ function Canvas() {
       );
     }
   }, [getNodes, getEdges, setNodes, toast]);
+  
+  const nodeTypes: NodeTypes = useMemo(() => ({
+    prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
+    image: ImageNode,
+    output: ImageNode,
+  }), [handleGenerate]);
 
 
   const onConnect = useCallback(
@@ -251,9 +240,9 @@ function Canvas() {
                 panOnDrag={activeTool === 'pan'}
                 selectionOnDrag={activeTool === 'select'}
                 className={activeTool === 'pan' ? 'cursor-grab' : ''}
+                proOptions={proOptions}
             >
                 <Background />
-                <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable />
                 <FloatingControls activeTool={activeTool} onToolChange={setActiveTool} />
             </ReactFlow>
         </div>
@@ -347,10 +336,8 @@ function DashboardPageContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <DashboardPageContent />
     </Suspense>
   )
 }
-
-    

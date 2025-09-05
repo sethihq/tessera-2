@@ -107,7 +107,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <DashboardLayoutContent>{children}</DashboardLayoutContent>
     </Suspense>
   )
