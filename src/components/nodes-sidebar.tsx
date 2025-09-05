@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, ImageIcon, MoveRight, Scissors } from 'lucide-react';
+import { Workflow, Text, ImageIcon, MoveRight, Scissors, Hand } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 export function NodesSidebar() {

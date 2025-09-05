@@ -24,7 +24,7 @@ import 'reactflow/dist/style.css';
 import { NodesSidebar } from '@/components/nodes-sidebar';
 import { PromptNode } from '@/components/prompt-node';
 import { ImageNode } from '@/components/image-node';
-import { FloatingControls } from '@/components/floating-controls';
+import { FloatingControls, type Tool } from '@/components/floating-controls';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -57,6 +57,7 @@ function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [activeTool, setActiveTool] = useState<Tool>('select');
   
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: PromptNode,
@@ -138,15 +139,20 @@ function Canvas() {
     (deleted) => {
       setEdges(
         deleted.reduce((acc, node) => {
-          const incomers = getConnectedEdges([node], edges).filter((edge) => edge.target === node.id);
-          const outgoers = getConnectedEdges([node], edges).filter((edge) => edge.source === node.id);
-          const connectedEdges = [...incomers, ...outgoers];
+          const connectedEdges = getConnectedEdges([node], edges);
           const edgeIds = connectedEdges.map((edge) => edge.id);
           return acc.filter((edge) => !edgeIds.includes(edge.id));
         }, edges)
       );
     },
-    [nodes, edges]
+    [edges, setEdges]
+  );
+
+  const onEdgesDelete: OnEdgesDelete = useCallback(
+    (deleted) => {
+      setEdges(edges.filter((edge) => !deleted.includes(edge)));
+    },
+    [edges, setEdges]
   );
 
   return (
@@ -160,15 +166,19 @@ function Canvas() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onNodesDelete={onNodesDelete}
+                onEdgesDelete={onEdgesDelete}
                 onConnect={onConnect}
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 fitView
+                panOnDrag={activeTool === 'pan'}
+                selectionOnDrag={activeTool === 'select'}
+                className={activeTool === 'pan' ? 'cursor-grab' : ''}
             >
                 <Background />
                 <MiniMap nodeColor={nodeColor} nodeStrokeWidth={3} zoomable pannable />
-                <FloatingControls />
+                <FloatingControls activeTool={activeTool} onToolChange={setActiveTool} />
             </ReactFlow>
         </div>
     </div>
