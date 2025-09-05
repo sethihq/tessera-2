@@ -15,7 +15,6 @@ import ReactFlow, {
   NodeTypes,
   ReactFlowProvider,
   useReactFlow,
-  getConnectedEdges,
   getOutgoers,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -30,6 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generateAssetsFromTextPrompt } from '@/ai/flows/generate-assets-from-text-prompt';
 import { useToast } from '@/hooks/use-toast';
+import { Plus } from 'lucide-react';
 
 
 const initialNodes: Node[] = [
@@ -77,16 +77,15 @@ function Canvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
-  const { getNodes, getEdges } = useReactFlow();
+  const { getNodes } = useReactFlow();
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
-    const allEdges = getEdges();
     
     const promptNode = allNodes.find(n => n.id === nodeId);
     if (!promptNode) return;
 
-    const downstreamNodes = getOutgoers(promptNode, allNodes, allEdges);
+    const downstreamNodes = getOutgoers(promptNode, nodes, edges);
 
     if (downstreamNodes.length === 0) {
       toast({
@@ -97,7 +96,6 @@ function Canvas() {
       return;
     }
 
-    // Set loading state on downstream nodes
     setNodes(nds => 
       nds.map(n => {
         if (downstreamNodes.some(dn => dn.id === n.id)) {
@@ -131,7 +129,6 @@ function Canvas() {
         title: "Generation Failed",
         description: "There was an error generating the asset. Please try again.",
       });
-      // Reset loading state on error
       setNodes(nds => 
         nds.map(n => {
           if (downstreamNodes.some(dn => dn.id === n.id)) {
@@ -144,7 +141,7 @@ function Canvas() {
         })
       );
     }
-  }, [getNodes, getEdges, setNodes, toast]);
+  }, [getNodes, setNodes, toast, nodes, edges]);
   
   const nodeTypes: NodeTypes = useMemo(() => ({
     prompt: (props) => <PromptNode {...props} onGenerate={handleGenerate} />,
@@ -302,6 +299,7 @@ function DashboardPageContent() {
         <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold">Projects</h1>
             <Button>
+                <Plus className="mr-2 h-4 w-4" />
                 New Project
             </Button>
         </div>

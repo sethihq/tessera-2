@@ -42,19 +42,19 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           </div>
           <div className="flex-1">
              <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold tracking-tight my-2">
+              <div className="flex items-center justify-between py-2">
+                <h2 className="text-lg font-semibold tracking-tight">
                   Projects
                 </h2>
                 <Button size="sm">
-                  <Plus className="mr-2 h-4 w-4" /> New Project
+                  <Plus className="h-4 w-4" /> 
                 </Button>
               </div>
                <div className="flex flex-col gap-2 py-4">
                 <Button variant="ghost" className="justify-start gap-3">
                   <Folder /> My Game
                 </Button>
-                <Button variant="ghost" className="justify-start gap-3 pl-11 w-full" asChild>
+                <Button variant="secondary" className="justify-start gap-3 pl-11 w-full" asChild>
                   <Link href="/dashboard?file=main-scene"><File /> Main Scene</Link>
                 </Button>
                 <Button variant="ghost" className="justify-start gap-3 pl-11">
