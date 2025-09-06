@@ -51,6 +51,8 @@ export function InputNode({ id, data }: InputNodeProps) {
     setEdges((edges) => edges.filter((e) => e.source !== nodeId && e.target !== nodeId));
   }, [nodeId, setNodes, setEdges]);
 
+  const isAnimationNode = data.nodeType === 'animation';
+
   return (
     <div className="w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-neutral-700 p-4">
@@ -81,7 +83,8 @@ export function InputNode({ id, data }: InputNodeProps) {
             )}
           </div>
         ))}
-         {data.nodeType === 'animation' ? (
+      </div>
+       {isAnimationNode ? (
           <>
              <Handle type="target" position={Position.Top} id="char-in" />
              <Handle type="source" position={Position.Right} id="asset-out" />
@@ -93,7 +96,6 @@ export function InputNode({ id, data }: InputNodeProps) {
             <Handle type="target" position={Position.Top} />
           </>
         )}
-      </div>
     </div>
   );
 }
