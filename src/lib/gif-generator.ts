@@ -1,3 +1,4 @@
+
 import sharp from 'sharp';
 import GIFEncoder from 'gif-encoder-2';
 import { Readable } from 'stream';
@@ -24,13 +25,14 @@ export async function createGifFromSpriteSheet(
   const frameHeight = Math.floor((metadata.height || 0) / rows);
 
   if (frameWidth <= 0 || frameHeight <= 0) {
-    throw new Error('Invalid frame dimensions calculated. Ensure columns and rows are correct.');
+    throw new Error(
+      `Invalid frame dimensions calculated. The image is ${metadata.width}x${metadata.height} but the grid is ${columns}x${rows}. Please ensure the grid dimensions are correct for the source image.`
+    );
   }
 
-  const encoder = new GIFEncoder(frameWidth, frameHeight);
+  const encoder = new GIFEncoder(frameWidth, frameHeight, 'neuquant', true);
   const stream = encoder.createReadStream();
   
-  // This promise will resolve when the stream is finished
   const gifPromise = new Promise<string>((resolve, reject) => {
     const chunks: Buffer[] = [];
     stream.on('data', (chunk) => chunks.push(chunk as Buffer));
@@ -40,32 +42,35 @@ export async function createGifFromSpriteSheet(
     });
     stream.on('error', (err) => {
         console.error('Error generating GIF stream:', err);
-        reject(new Error('Failed to generate GIF from sprite sheet.'));
+        reject(new Error('Failed to generate GIF from sprite sheet stream.'));
     });
   });
 
-  // Start the encoding process
   encoder.start();
-  encoder.setRepeat(0); // 0 for infinite repeat
+  encoder.setRepeat(0); 
   encoder.setDelay(1000 / frameRate);
-  encoder.setQuality(10); // 1-20, lower is better
+  encoder.setQuality(10);
 
-  // Process each frame sequentially and add to the encoder
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < columns; x++) {
-      const frameBuffer = await image
-        .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
-        .ensureAlpha() // Ensure transparency is handled
-        .raw()
-        .toBuffer();
-      
-      encoder.addFrame(frameBuffer as any);
+  try {
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < columns; x++) {
+        const frameBuffer = await image
+          .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
+          .ensureAlpha()
+          .raw()
+          .toBuffer();
+        
+        encoder.addFrame(frameBuffer as any);
+      }
     }
+  } catch (error: any) {
+    console.error('Error during frame extraction:', error);
+    throw new Error(
+      `Failed to extract frames. This usually means the grid dimensions (${columns}x${rows}) do not match the sprite sheet image dimensions (${metadata.width}x${metadata.height}). Please double-check the 'Sprite Grid' setting. Original error: ${error.message}`
+    );
   }
 
-  // Finish encoding and trigger the 'end' event on the stream
   encoder.finish();
   
-  // Wait for the stream to complete and return the result
   return gifPromise;
 }
