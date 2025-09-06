@@ -100,7 +100,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         )}
 
         {isGifNode && (sourceNodeImage || data.image) && !data.loading && (
-          <div className="w-full space-y-2">
+          <div className="w-full space-y-2 pt-4">
             <Label htmlFor="grid-size">Sprite Grid</Label>
             <Select value={gridSize} onValueChange={setGridSize}>
               <SelectTrigger id="grid-size">
@@ -115,17 +115,18 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
             </Select>
           </div>
         )}
-        <Handle type="source" position={Position.Bottom} />
-        <Handle type="target" position={Position.Top} />
+        
       </div>
-       {(isGifNode && sourceNodeImage) || isGeneratorNode && (
-        <div className="flex items-center p-6 pt-0">
+       <div className="p-6 pt-0">
+        {(isGifNode && sourceNodeImage) || (isGeneratorNode && hasSourceConnection) ? (
           <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
             {isGifNode ? <Scissors className="mr-2 h-4 w-4" /> : <Workflow className="mr-2 h-4 w-4" />}
             {isGifNode ? 'Generate GIF' : 'Generate'}
           </Button>
-        </div>
-      )}
+        ) : null}
+       </div>
+       <Handle type="source" position={Position.Bottom} />
+       <Handle type="target" position={Position.Top} />
     </div>
   );
 }

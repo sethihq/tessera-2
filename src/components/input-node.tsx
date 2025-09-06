@@ -59,7 +59,7 @@ export function InputNode({ id, data }: InputNodeProps) {
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-6 space-y-4">
+      <div className="p-6 pt-6 space-y-4">
         {data.fields.map((field) => (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>{field.label}</Label>
@@ -81,9 +81,9 @@ export function InputNode({ id, data }: InputNodeProps) {
             )}
           </div>
         ))}
-        {data.nodeType === 'animation' ? (
+         {data.nodeType === 'animation' ? (
           <>
-            <Handle type="target" position={Position.Left} />
+            <Handle type="target" position={Position.Top} />
             <Handle type="source" position={Position.Right} />
             <Handle type="source" position={Position.Bottom} />
           </>
