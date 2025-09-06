@@ -18,17 +18,31 @@ export async function createGifFromSpriteSheet(
   frameRate: number = 10
 ): Promise<string> {
   const imageBuffer = Buffer.from(base64Image, 'base64');
-  const image = sharp(imageBuffer);
+  let image = sharp(imageBuffer);
   const metadata = await image.metadata();
 
-  const frameWidth = Math.floor((metadata.width || 0) / columns);
-  const frameHeight = Math.floor((metadata.height || 0) / rows);
+  const originalWidth = metadata.width || 0;
+  const originalHeight = metadata.height || 0;
 
-  if (frameWidth <= 0 || frameHeight <= 0) {
-    throw new Error(
-      `Invalid frame dimensions calculated. The image is ${metadata.width}x${metadata.height} but the grid is ${columns}x${rows}. Please ensure the grid dimensions are correct for the source image.`
+  if (originalWidth === 0 || originalHeight === 0) {
+    throw new Error('Could not read image dimensions from sprite sheet.');
+  }
+
+  // **THE FIX**: Calculate the largest dimensions that are perfectly divisible by the grid.
+  const newWidth = Math.floor(originalWidth / columns) * columns;
+  const newHeight = Math.floor(originalHeight / rows) * rows;
+
+  if (newWidth === 0 || newHeight === 0) {
+     throw new Error(
+      `Invalid grid dimensions (${columns}x${rows}) for a ${originalWidth}x${originalHeight} image. The resulting frame size would be zero.`
     );
   }
+  
+  // Resize the image to the new, perfectly divisible dimensions.
+  image = image.resize(newWidth, newHeight);
+
+  const frameWidth = newWidth / columns;
+  const frameHeight = newHeight / rows;
 
   const encoder = new GIFEncoder(frameWidth, frameHeight, 'neuquant', true);
   const stream = encoder.createReadStream();
@@ -51,23 +65,17 @@ export async function createGifFromSpriteSheet(
   encoder.setDelay(1000 / frameRate);
   encoder.setQuality(10);
 
-  try {
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < columns; x++) {
-        const frameBuffer = await image
-          .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
-          .ensureAlpha()
-          .raw()
-          .toBuffer();
-        
-        encoder.addFrame(frameBuffer as any);
-      }
+  // With the resized image, this loop is now guaranteed to be safe.
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      const frameBuffer = await image
+        .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
+        .ensureAlpha()
+        .raw()
+        .toBuffer();
+      
+      encoder.addFrame(frameBuffer as any);
     }
-  } catch (error: any) {
-    console.error('Error during frame extraction:', error);
-    throw new Error(
-      `Failed to extract frames. This usually means the grid dimensions (${columns}x${rows}) do not match the sprite sheet image dimensions (${metadata.width}x${metadata.height}). Please double-check the 'Sprite Grid' setting. Original error: ${error.message}`
-    );
   }
 
   encoder.finish();
