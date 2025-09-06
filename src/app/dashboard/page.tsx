@@ -133,7 +133,7 @@ function Canvas() {
         }
       };
 
-      const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData) });
+      const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData, null, 2) });
       const { assetDataUri } = result;
 
       setReactFlowNodes(nds => 
@@ -189,26 +189,12 @@ function Canvas() {
       });
       return;
     }
-
-    setReactFlowEdges(eds => 
-      eds.map(e => {
-        if (e.target === nodeId) {
-          return { ...e, type: 'custom', animated: true };
-        }
-        return e;
-      })
-    );
-
+    
     setReactFlowNodes(nds => 
-      nds.map(n => {
-        if (n.id === nodeId) {
-          return {
-            ...n,
-            data: { ...n.data, loading: true },
-          };
-        }
-        return n;
-      })
+      nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: true } } : n)
+    );
+    setReactFlowEdges(eds => 
+      eds.map(e => e.target === nodeId ? { ...e, type: 'custom', animated: true } : e)
     );
 
     try {
@@ -233,21 +219,11 @@ function Canvas() {
             description: error.message || "There was an error generating the GIF. Please try again.",
         });
         setReactFlowNodes(nds => 
-            nds.map(n => {
-                if (n.id === nodeId) {
-                    return { ...n, data: { ...n.data, loading: false } };
-                }
-                return n;
-            })
+            nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: false } } : n)
         );
     } finally {
         setReactFlowEdges(eds => 
-            eds.map(e => {
-                if (e.target === nodeId) {
-                    return { ...e, type: 'default', animated: false };
-                }
-                return e;
-            })
+            eds.map(e => e.target === nodeId ? { ...e, type: 'default', animated: false } : e)
         );
     }
 
@@ -301,13 +277,16 @@ function Canvas() {
       if (!dataString || !reactFlowInstance) return;
 
       const { type, payload } = JSON.parse(dataString);
-      const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
 
       if (type === 'workflow') {
         const { nodes: workflowNodes, edges: workflowEdges } = payload;
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
-        const idMap = new Map();
+        const idMap = new Map<string, string>();
 
         workflowNodes.forEach((node: any) => {
           const oldId = node.id;
@@ -526,3 +505,5 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    
