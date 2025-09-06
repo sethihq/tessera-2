@@ -75,8 +75,10 @@ function Canvas() {
       let currentNode: Node | undefined = generatorNode;
       let characterNode: Node | undefined;
       let animationNode: Node | undefined;
+      
+      const keyframeNodes: Node[] = [];
 
-      // Traverse backwards from the generator node
+      // Traverse backwards from the generator node to collect keyframes in order
       while (currentNode) {
         const incomers = getIncomers(currentNode, allNodes, allEdges);
         if (incomers.length === 0) break;
@@ -84,9 +86,7 @@ function Canvas() {
         const parentNode = incomers[0];
 
         if (parentNode.data.nodeType === 'keyframe') {
-            keyframes.unshift({
-                description: parentNode.data.fields.find((f:any) => f.id === 'description')?.value,
-            });
+            keyframeNodes.unshift(parentNode); // Add to the beginning to maintain order
         } else if (parentNode.data.nodeType === 'animation') {
             animationNode = parentNode;
             const animationIncomers = getIncomers(animationNode, allNodes, allEdges);
@@ -95,20 +95,20 @@ function Canvas() {
         }
         currentNode = parentNode;
       }
+      
+      if (keyframeNodes.length === 0) {
+        throw new Error("At least one Keyframe node must be in the sequence.");
+      }
+      
+      const numberedKeyframes = keyframeNodes.map((node, index) => ({
+          keyframe_number: index + 1,
+          description: node.data.fields.find((f:any) => f.id === 'description')?.value,
+      }));
+
 
       if (!characterNode || !animationNode) {
         throw new Error("A Character and an Animation node must be connected in sequence to the keyframes.");
       }
-      
-      if (keyframes.length === 0) {
-        throw new Error("At least one Keyframe node must be in the sequence.");
-      }
-
-      // Add keyframe numbers
-      const numberedKeyframes = keyframes.map((kf, index) => ({
-          ...kf,
-          keyframe_number: index + 1,
-      }));
 
       const promptData = {
         sprite_sheet: {
@@ -116,7 +116,11 @@ function Canvas() {
           canvas: {
             size: "64x64 pixels",
             background: "transparent",
-            consistency: "same pose alignment, proportions, and framing across all keyframes"
+            consistency: [
+              "Use onion skinning principles to ensure frame-to-frame alignment.",
+              "The character must be anchored to the center of each frame.",
+              "Maintain a consistent character size and a centered bounding box across all keyframes."
+            ]
           },
           character: {
             identity: characterNode.data.fields.find((f:any) => f.id === 'identity').value,
