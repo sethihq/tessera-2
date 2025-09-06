@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a sprite sheet from a structured JSON object.
@@ -40,8 +41,11 @@ const generateSpriteSheetFlow = ai.defineFlow(
     `;
 
     const { media } = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: imageGenerationPrompt,
+      model: 'googleai/gemini-2.5-flash-image-preview',
+      prompt: [{ text: imageGenerationPrompt }],
+       config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
     });
 
     if (!media) {
