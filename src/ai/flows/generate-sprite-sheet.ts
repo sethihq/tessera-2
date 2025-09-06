@@ -41,7 +41,7 @@ const generateSpriteSheetFlow = ai.defineFlow(
 
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.5-flash-image-preview',
-      prompt: imageGenerationPrompt,
+      prompt: [{ text: imageGenerationPrompt }],
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
