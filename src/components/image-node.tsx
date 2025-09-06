@@ -3,7 +3,7 @@
 import { Handle, Position, useReactFlow, useNodeId, useStore } from 'reactflow';
 import Image from 'next/image';
 import { Button } from './ui/button';
-import { Scissors, X, Sparkles, Workflow } from 'lucide-react';
+import { Scissors, X, Workflow } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -67,16 +67,17 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   const isGeneratorNode = data.nodeType === 'asset-generator';
 
   return (
-    <div className={`w-80 rounded-lg border bg-background text-foreground shadow-sm ${isTarget ? 'border-primary' : ''}`}>
-      <div className="flex flex-row items-center justify-between p-6 pb-0">
-        <div className="text-base font-semibold leading-none tracking-tight">{data.label}</div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
+    <div className={`w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm ${isTarget ? 'border-primary' : ''}`}>
+       <div className="flex items-center justify-between border-b border-neutral-700 p-4">
+        <div className="text-sm font-semibold tracking-tight">{data.label}</div>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-400 hover:bg-neutral-700 hover:text-white" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-6 pt-0 min-h-40 flex flex-col items-center justify-center gap-4">
+
+      <div className="p-4 flex flex-col items-center justify-center gap-4 min-h-[200px]">
         {data.loading ? (
-          <Skeleton className="w-[250px] h-[250px]" />
+          <Skeleton className="w-[250px] h-[250px] bg-neutral-700" />
         ) : data.image ? (
           <Image
             src={data.image}
@@ -94,19 +95,19 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
             className="rounded-md opacity-50"
           />
         ) : (
-          <div className="text-muted-foreground text-sm">
-            {isGifNode ? 'Connect an image to generate a GIF' : 'Connect an Animation to generate'}
+          <div className="text-neutral-400 text-sm text-center px-6">
+            {isGifNode ? 'Connect an image node to generate a GIF' : 'Connect an Animation node to generate an asset'}
           </div>
         )}
 
         {isGifNode && (sourceNodeImage || data.image) && !data.loading && (
           <div className="w-full space-y-2 pt-4">
-            <Label htmlFor="grid-size">Sprite Grid</Label>
+            <Label htmlFor="grid-size" className="text-xs font-medium text-neutral-400">Sprite Grid</Label>
             <Select value={gridSize} onValueChange={setGridSize}>
-              <SelectTrigger id="grid-size">
+              <SelectTrigger id="grid-size" className="bg-neutral-800 border-neutral-700 text-white focus:ring-primary">
                 <SelectValue placeholder="Select grid size" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
                 <SelectItem value="2x2">2x2</SelectItem>
                 <SelectItem value="3x3">3x3</SelectItem>
                 <SelectItem value="4x4">4x4</SelectItem>
@@ -117,11 +118,11 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         )}
         
       </div>
-       <div className="p-6 pt-0">
+       <div className="p-4 pt-0">
         {(isGifNode && sourceNodeImage) || (isGeneratorNode && hasSourceConnection) ? (
           <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
-            {isGifNode ? <Scissors className="mr-2 h-4 w-4" /> : <Workflow className="mr-2 h-4 w-4" />}
-            {isGifNode ? 'Generate GIF' : 'Generate'}
+            {isGeneratorNode ? <Workflow className="mr-2 h-4 w-4" /> : <Scissors className="mr-2 h-4 w-4" />}
+            {isGeneratorNode ? 'Generate' : 'Generate GIF'}
           </Button>
         ) : null}
        </div>

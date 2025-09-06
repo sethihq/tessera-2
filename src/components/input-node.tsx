@@ -52,23 +52,23 @@ export function InputNode({ id, data }: InputNodeProps) {
   }, [nodeId, setNodes, setEdges]);
 
   return (
-    <div className="w-80 rounded-lg border bg-background text-foreground shadow-sm">
-      <div className="flex flex-row items-center justify-between p-6 pb-0">
-        <div className="text-base font-semibold leading-none tracking-tight">{data.label}</div>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
+    <div className="w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm">
+      <div className="flex items-center justify-between border-b border-neutral-700 p-4">
+        <div className="text-sm font-semibold tracking-tight">{data.label}</div>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-400 hover:bg-neutral-700 hover:text-white" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-6 pt-6 space-y-4">
+      <div className="p-4 space-y-4">
         {data.fields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>{field.label}</Label>
+            <Label htmlFor={field.id} className="text-xs font-medium text-neutral-400">{field.label}</Label>
             {field.type === 'textarea' ? (
               <Textarea
                 id={field.id}
                 defaultValue={field.value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                className="nodrag"
+                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
               />
             ) : (
               <Input
@@ -76,16 +76,16 @@ export function InputNode({ id, data }: InputNodeProps) {
                 type={field.type}
                 defaultValue={field.value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                className="nodrag"
+                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
               />
             )}
           </div>
         ))}
          {data.nodeType === 'animation' ? (
           <>
-            <Handle type="target" position={Position.Top} />
-            <Handle type="source" position={Position.Right} />
-            <Handle type="source" position={Position.Bottom} />
+             <Handle type="target" position={Position.Top} id="char-in" />
+             <Handle type="source" position={Position.Right} id="asset-out" />
+             <Handle type="source" position={Position.Bottom} id="stage-out" />
           </>
         ) : (
           <>
