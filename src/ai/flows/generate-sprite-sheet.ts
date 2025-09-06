@@ -33,8 +33,8 @@ const generateSpriteSheetFlow = ai.defineFlow(
   async (input) => {
     const imageGenerationPrompt = `
       You are an expert pixel artist. Create a sprite sheet based on the following JSON object.
-      The output should be a single image containing all the frames arranged in a grid.
-      Pay close attention to the 'consistency' requirement to ensure all frames are aligned.
+      The output should be a single image containing all the keyframes arranged in a grid.
+      Pay close attention to the 'consistency' requirement to ensure all keyframes are aligned.
 
       ${input.prompt}
     `;
@@ -54,5 +54,3 @@ const generateSpriteSheetFlow = ai.defineFlow(
     return { assetDataUri: media.url! };
   }
 );
-
-    

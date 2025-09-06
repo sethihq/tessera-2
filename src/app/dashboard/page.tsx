@@ -91,22 +91,22 @@ function Canvas() {
             throw new Error("At least one Stage node must be connected from the Animation node.");
         }
         
-        const frames = [];
+        const keyframes = [];
         for (const stageNode of stageNodes) {
             const stageOutgoers = getOutgoers(stageNode, allNodes, allEdges);
-            const frameNodes = stageOutgoers.filter(n => n.data.nodeType === 'frame');
+            const keyframeNodes = stageOutgoers.filter(n => n.data.nodeType === 'keyframe');
             
-            for (const frameNode of frameNodes) {
-                 frames.push({
-                    frame_number: frames.length + 1,
+            for (const keyframeNode of keyframeNodes) {
+                 keyframes.push({
+                    keyframe_number: keyframes.length + 1,
                     stage: stageNode.data.fields.find((f:any) => f.id === 'stage_number')?.value,
-                    description: frameNode.data.fields.find((f:any) => f.id === 'description')?.value,
+                    description: keyframeNode.data.fields.find((f:any) => f.id === 'description')?.value,
                  });
             }
         }
 
-        if (frames.length === 0) {
-            throw new Error("At least one Frame node must be connected to a Stage node.");
+        if (keyframes.length === 0) {
+            throw new Error("At least one Keyframe node must be connected to a Stage node.");
         }
 
         const promptData = {
@@ -115,7 +115,7 @@ function Canvas() {
             canvas: {
               size: "64x64 pixels",
               background: "transparent",
-              consistency: "same pose alignment, proportions, and framing across all frames"
+              consistency: "same pose alignment, proportions, and framing across all keyframes"
             },
             character: {
               identity: characterNode.data.fields.find((f:any) => f.id === 'identity').value,
@@ -129,7 +129,7 @@ function Canvas() {
                   description: sn.data.fields.find((f:any) => f.id === 'description').value,
               })),
             },
-            frames,
+            keyframes,
           }
         };
 
@@ -531,5 +531,3 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
-
-    
