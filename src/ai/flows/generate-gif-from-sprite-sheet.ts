@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates an animated GIF from a sprite sheet.
@@ -17,7 +18,8 @@ const GenerateGifFromSpriteSheetInputSchema = z.object({
     .describe(
       "The source sprite sheet image, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-    grid: z.string().describe('The grid size of the sprite sheet (e.g., "4x4", "2x2").'),
+    columns: z.number().describe('The number of columns in the sprite sheet grid.'),
+    rows: z.number().describe('The number of rows in the sprite sheet grid.'),
 });
 export type GenerateGifFromSpriteSheetInput = z.infer<typeof GenerateGifFromSpriteSheetInputSchema>;
 
@@ -38,10 +40,9 @@ const generateGifFromSpriteSheetFlow = ai.defineFlow(
     outputSchema: GenerateGifFromSpriteSheetOutputSchema,
   },
   async (input) => {
-    const [columns, rows] = input.grid.split('x').map(Number);
     const base64Image = input.sourceImageUri.split(',')[1];
     
-    const gifDataUri = await createGifFromSpriteSheet(base64Image, columns, rows);
+    const gifDataUri = await createGifFromSpriteSheet(base64Image, input.columns, input.rows);
 
     return { assetDataUri: gifDataUri };
   }

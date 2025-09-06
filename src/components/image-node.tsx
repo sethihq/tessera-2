@@ -21,13 +21,14 @@ interface ImageNodeProps {
     sourceImage?: string;
   };
   onGenerate: (nodeId: string) => void;
-  onGenerateGif: (nodeId: string, grid: string) => void;
+  onGenerateGif: (nodeId: string, columns: number, rows: number) => void;
 }
 
 export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProps) {
   const { setNodes, setEdges } = useReactFlow();
   const nodeId = useNodeId();
-  const [gridSize, setGridSize] = useState('4x4');
+  const [columns, setColumns] = useState(4);
+  const [rows, setRows] = useState(4);
 
   const onDelete = useCallback(() => {
     if (!id) return;
@@ -38,8 +39,6 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   const connectionNodeId = useStore(connectionNodeIdSelector);
   const isTarget = connectionNodeId && connectionNodeId !== id;
   
-  // The primary image to display. If the node has its own generated image (a GIF), show that.
-  // Otherwise, show the source image passed from the generator.
   const displayImage = data.image || data.sourceImage;
   
   const handleGenerateClick = () => {
@@ -47,13 +46,12 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
       if(data.nodeType === 'asset-generator') {
         onGenerate(nodeId);
       } else {
-        onGenerateGif(nodeId, gridSize);
+        onGenerateGif(nodeId, columns, rows);
       }
     }
   };
   
   const isGifNode = data.nodeType === 'generate-gif';
-  // Asset generator is ready if it's connected to something. A more robust check might be needed.
   const isAssetGeneratorReady = !isGifNode; 
 
   return (
@@ -83,15 +81,27 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         )}
 
         {isGifNode && (data.sourceImage || data.image) && !data.loading && (
-          <div className="w-full space-y-2 pt-4">
-            <Label htmlFor="grid-size" className="text-xs font-medium text-neutral-400">Sprite Grid</Label>
-            <Input
-              id="grid-size"
-              placeholder="e.g., 4x4"
-              value={gridSize}
-              onChange={(e) => setGridSize(e.target.value)}
-              className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
-            />
+           <div className="w-full grid grid-cols-2 gap-4 pt-4">
+            <div className="space-y-2">
+                <Label htmlFor="columns" className="text-xs font-medium text-neutral-400">Columns</Label>
+                <Input
+                id="columns"
+                type="number"
+                value={columns}
+                onChange={(e) => setColumns(parseInt(e.target.value, 10))}
+                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                />
+            </div>
+            <div className="space-y-2">
+                 <Label htmlFor="rows" className="text-xs font-medium text-neutral-400">Rows</Label>
+                <Input
+                id="rows"
+                type="number"
+                value={rows}
+                onChange={(e) => setRows(parseInt(e.target.value, 10))}
+                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                />
+            </div>
           </div>
         )}
         

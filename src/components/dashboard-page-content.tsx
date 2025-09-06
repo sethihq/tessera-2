@@ -134,7 +134,6 @@ function Canvas() {
       const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData, null, 2) });
       const { assetDataUri } = result;
       
-      // Update the generator node with the new image
       setReactFlowNodes(nds => 
           nds.map(n => {
               if (n.id === nodeId) {
@@ -144,20 +143,15 @@ function Canvas() {
           })
       );
       
-      // After generating, find any connected GIF node and pass the image to it.
       const outgoingEdges = allEdges.filter(e => e.source === nodeId);
-      if (outgoingEdges.length > 0) {
-        const connectedNodeId = outgoingEdges[0].target;
+      for (const edge of outgoingEdges) {
+        const connectedNodeId = edge.target;
         const connectedNode = allNodes.find(n => n.id === connectedNodeId);
         if (connectedNode && connectedNode.data.nodeType === 'generate-gif') {
           setReactFlowNodes(nds => 
             nds.map(n => {
               if (n.id === connectedNodeId) {
-                // Pass the source image and clear any old GIF
                 return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } }; 
-              } else if (n.id === nodeId) {
-                // Ensure the generator node also gets the image
-                return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
               }
               return n;
             })
@@ -182,14 +176,13 @@ function Canvas() {
     }
   }, [getNodes, setReactFlowNodes, toast, getEdges, setReactFlowEdges]);
 
-  const handleGenerateGif = useCallback(async (nodeId: string, grid: string) => {
+  const handleGenerateGif = useCallback(async (nodeId: string, columns: number, rows: number) => {
     const allNodes = getNodes();
     const allEdges = getEdges();
 
     const gifNode = allNodes.find(n => n.id === nodeId);
     if (!gifNode) return;
     
-    // Use the sourceImage from the node's data, which was passed on connection/generation
     const sourceImageUri = gifNode.data.sourceImage;
 
     if (!sourceImageUri) {
@@ -209,7 +202,7 @@ function Canvas() {
     );
 
     try {
-      const result = await generateGifFromSpriteSheet({ sourceImageUri, grid });
+      const result = await generateGifFromSpriteSheet({ sourceImageUri, columns, rows });
       const { assetDataUri } = result;
       setReactFlowNodes(nds => 
         nds.map(n => {
@@ -261,7 +254,6 @@ function Canvas() {
             setReactFlowNodes(nds => 
                 nds.map(n => {
                     if (n.id === targetNode.id) {
-                        // Pass the source image and clear any old GIF
                         return { ...n, data: { ...n.data, sourceImage: sourceNode.data.image, image: null } };
                     }
                     return n;
@@ -514,5 +506,3 @@ export function DashboardPageContent() {
     </main>
   );
 }
-
-    
