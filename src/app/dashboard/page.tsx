@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useCallback, DragEvent, useMemo, Suspense } from 'react';
+import React, { useState, useCallback, DragEvent, useMemo, Suspense, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import ReactFlow, {
@@ -53,7 +53,7 @@ function Canvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
-  const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges } = useReactFlow();
+  const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges, getNode } = useReactFlow();
 
   const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
@@ -326,9 +326,32 @@ function Canvas() {
     },
     [reactFlowInstance, setNodes]
   );
+  
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        const selectedNodes = nodes.filter((n) => n.selected);
+        if (selectedNodes.length === 1) {
+          const nodeToDuplicate = selectedNodes[0];
+          const newNode: Node = {
+            id: getId(),
+            type: nodeToDuplicate.type,
+            position: {
+              x: nodeToDuplicate.position.x + 20,
+              y: nodeToDuplicate.position.y + 20,
+            },
+            data: { ...nodeToDuplicate.data },
+          };
+          setNodes((nds) => nds.concat(newNode));
+        }
+      }
+    },
+    [nodes, setNodes]
+  );
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full" onKeyDown={onKeyDown} tabIndex={0}>
         <NodesSidebar />
         <div className="flex-1 h-full">
             <ReactFlow
@@ -347,6 +370,7 @@ function Canvas() {
                 selectionOnDrag={activeTool === 'select'}
                 className={activeTool === 'pan' ? 'cursor-grab' : ''}
                 proOptions={proOptions}
+                deleteKeyCode={['Backspace', 'Delete']}
             >
                 <Background />
                  <defs>
@@ -482,3 +506,5 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+
+    
