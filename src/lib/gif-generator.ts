@@ -23,57 +23,44 @@ export async function createGifFromSpriteSheet(
     const frameWidth = Math.floor((metadata.width || 0) / columns);
     const frameHeight = Math.floor((metadata.height || 0) / rows);
     
-    if (frameWidth === 0 || frameHeight === 0) {
-        throw new Error('Invalid frame dimensions calculated.');
+    if (frameWidth <= 0 || frameHeight <= 0) {
+        throw new Error('Invalid frame dimensions calculated. Ensure columns and rows are correct.');
     }
 
     const encoder = new GIFEncoder(frameWidth, frameHeight);
 
-    encoder.start();
-    encoder.setRepeat(0); // 0 for repeat, -1 for no-repeat
-    encoder.setDelay(1000 / frameRate);
-    encoder.setQuality(10); // 1-30, lower is better
-
-    const canvas = sharp({
-        create: {
-            width: frameWidth,
-            height: frameHeight,
-            channels: 4,
-            background: { r: 0, g: 0, b: 0, alpha: 0 }
-        }
-    }).png();
-
-    const context = encoder.createWriteStream();
+    const stream = encoder.createReadStream();
+    const chunks: Buffer[] = [];
+    stream.on('data', (chunk) => chunks.push(chunk as Buffer));
     
-    const framePromises: Promise<void>[] = [];
+    encoder.start();
+    encoder.setRepeat(0); // 0 for repeat
+    encoder.setDelay(1000 / frameRate);
+    encoder.setQuality(10); // Lower is better quality
 
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < columns; x++) {
-          const framePromise = new Promise<void>(async (resolve) => {
-            const frameBuffer = await image
-              .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
-              .ensureAlpha()
-              .raw()
-              .toBuffer();
-            
-            encoder.addFrame(frameBuffer);
-            resolve();
-          });
-          framePromises.push(framePromise);
+        const frameBuffer = await image
+          .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
+          .ensureAlpha() // Ensure the frame has an alpha channel
+          .raw()
+          .toBuffer();
+        
+        encoder.addFrame(frameBuffer);
       }
     }
     
-    await Promise.all(framePromises);
     encoder.finish();
 
-    const gifBuffer = await new Promise<Buffer>((resolve, reject) => {
-        const chunks: Buffer[] = [];
-        context.on('data', (chunk) => chunks.push(chunk));
-        context.on('end', () => resolve(Buffer.concat(chunks)));
-        context.on('error', reject);
+    // Wait for the stream to finish
+    await new Promise((resolve, reject) => {
+        stream.on('end', resolve);
+        stream.on('error', reject);
     });
 
+    const gifBuffer = Buffer.concat(chunks);
     return `data:image/gif;base64,${gifBuffer.toString('base64')}`;
+
   } catch (error) {
     console.error('Error generating GIF:', error);
     throw new Error('Failed to generate GIF from sprite sheet.');
