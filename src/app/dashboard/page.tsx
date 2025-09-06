@@ -302,29 +302,54 @@ function Canvas() {
     (event: DragEvent) => {
       event.preventDefault();
 
-      const nodeDataString = event.dataTransfer.getData('application/reactflow');
+      const dataString = event.dataTransfer.getData('application/reactflow');
+      if (!dataString || !reactFlowInstance) return;
 
-      if (typeof nodeDataString === 'undefined' || !nodeDataString || !reactFlowInstance) {
-        return;
+      const { type, payload } = JSON.parse(dataString);
+      const position = reactFlowInstance.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      if (type === 'workflow') {
+        const { nodes: workflowNodes, edges: workflowEdges } = payload;
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
+        const idMap = new Map();
+
+        workflowNodes.forEach((node: any) => {
+          const oldId = node.id;
+          const newId = getId();
+          idMap.set(oldId, newId);
+          newNodes.push({
+            id: newId,
+            type: node.type,
+            position: { x: position.x + node.position.x, y: position.y + node.position.y },
+            data: { ...node.data },
+          });
+        });
+
+        workflowEdges.forEach((edge: any) => {
+          newEdges.push({
+            ...edge,
+            id: `e${idMap.get(edge.source)}-${idMap.get(edge.target)}`,
+            source: idMap.get(edge.source),
+            target: idMap.get(edge.target),
+          });
+        });
+
+        setNodes((nds) => nds.concat(newNodes));
+        setEdges((eds) => eds.concat(newEdges));
+
+      } else { // It's a single node
+        const { nodeType, data } = payload;
+        const newNode: Node = {
+          id: getId(),
+          type: type,
+          position,
+          data: { ...data, nodeType },
+        };
+        setNodes((nds) => nds.concat(newNode));
       }
-      
-      const { type, nodeType, data } = JSON.parse(nodeDataString);
-
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
-      const newNode: Node = {
-        id: getId(),
-        type,
-        position,
-        data: { ...data, nodeType },
-      };
-
-      setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodes, setEdges]
   );
   
   const onKeyDown = useCallback(
