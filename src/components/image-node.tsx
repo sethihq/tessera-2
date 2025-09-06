@@ -1,6 +1,6 @@
 
 'use client';
-import { Handle, Position, useReactFlow, useNodeId, useStore } from 'reactflow';
+import { Handle, Position, useReactFlow, useNodeId, useStore, getIncomers } from 'reactflow';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { Scissors, X, Workflow } from 'lucide-react';
@@ -40,16 +40,17 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
 
   const sourceNode = useMemo(() => {
     if (!id) return null;
-    const edges = getEdges();
-    const nodes = getNodes();
-    const incomerEdge = edges.find(e => e.target === id);
-    if (!incomerEdge) return null;
-    return nodes.find(n => n.id === incomerEdge.source);
-  }, [id, getEdges, getNodes]);
+    const allNodes = getNodes();
+    const allEdges = getEdges();
+    const incomers = getIncomers({ id, type: 'output', data: data, position: {x:0, y:0} }, allNodes, allEdges);
+    return incomers.length > 0 ? incomers[0] : null;
+  }, [id, getEdges, getNodes, data]);
+
 
   const sourceNodeImage = sourceNode?.data.image;
-  const isSourceAnimationNode = sourceNode?.data.nodeType === 'animation';
   
+  // The generate button for an asset generator is active if its direct parent is a keyframe node.
+  const isAssetGeneratorReady = data.nodeType === 'asset-generator' && sourceNode?.data.nodeType === 'keyframe';
 
   const handleGenerateClick = () => {
     if (nodeId) {
@@ -62,7 +63,6 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   };
   
   const isGifNode = data.nodeType === 'generate-gif';
-  const isGeneratorNode = data.nodeType === 'asset-generator';
 
   return (
     <div className={`w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm ${isTarget ? 'border-primary' : ''}`}>
@@ -94,7 +94,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
           />
         ) : (
           <div className="text-neutral-400 text-sm text-center px-6">
-            {isGifNode ? 'Connect an image node to generate a GIF' : 'Connect an Animation node to generate an asset'}
+            {isGifNode ? 'Connect an image node to generate a GIF' : 'Connect a sequence of Keyframe nodes to generate an asset'}
           </div>
         )}
 
@@ -117,10 +117,10 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         
       </div>
        <div className="p-4 pt-0">
-        {(isGifNode && sourceNodeImage) || (isGeneratorNode && isSourceAnimationNode) ? (
+        {(isGifNode && sourceNodeImage) || isAssetGeneratorReady ? (
           <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
-            {isGeneratorNode ? <Workflow className="mr-2 h-4 w-4" /> : <Scissors className="mr-2 h-4 w-4" />}
-            {isGeneratorNode ? 'Generate' : 'Generate GIF'}
+            {data.nodeType === 'asset-generator' ? <Workflow className="mr-2 h-4 w-4" /> : <Scissors className="mr-2 h-4 w-4" />}
+            {data.nodeType === 'asset-generator' ? 'Generate' : 'Generate GIF'}
           </Button>
         ) : null}
        </div>

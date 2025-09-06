@@ -17,7 +17,6 @@ import ReactFlow, {
   ReactFlowProvider,
   useReactFlow,
   getIncomers,
-  getOutgoers,
   getConnectedEdges,
   EdgeTypes,
 } from 'reactflow';
@@ -55,95 +54,92 @@ function Canvas() {
   const { toast } = useToast();
   const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges, getNode } = useReactFlow();
 
-  const handleGenerate = useCallback(async (nodeId: string) => {
+ const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
     const allEdges = getEdges();
     
     const generatorNode = allNodes.find(n => n.id === nodeId);
     if (!generatorNode) return;
 
+    // Set loading state and animate edges
     setReactFlowNodes(nds => 
       nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: true } } : n)
     );
-    
     const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
     setReactFlowEdges(eds => 
       eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'custom', animated: true } : e)
     );
 
     try {
-        const generatorIncomers = getIncomers(generatorNode, allNodes, allEdges);
-        const animationNode = generatorIncomers.find(n => n.data.nodeType === 'animation');
+      const keyframes: any[] = [];
+      let currentNode: Node | undefined = generatorNode;
+      let characterNode: Node | undefined;
+      let animationNode: Node | undefined;
 
-        if (!animationNode) {
-            throw new Error("An Animation node must be connected to the Asset Generator node.");
-        }
+      // Traverse backwards from the generator node
+      while (currentNode) {
+        const incomers = getIncomers(currentNode, allNodes, allEdges);
+        if (incomers.length === 0) break;
         
-        const characterNode = getIncomers(animationNode, allNodes, allEdges).find(n => n.data.nodeType === 'character');
-        
-        if (!characterNode) {
-            throw new Error("A Character node must be connected to the Animation node.");
+        const parentNode = incomers[0];
+
+        if (parentNode.data.nodeType === 'keyframe') {
+            keyframes.unshift({
+                description: parentNode.data.fields.find((f:any) => f.id === 'description')?.value,
+            });
+        } else if (parentNode.data.nodeType === 'animation') {
+            animationNode = parentNode;
+            const animationIncomers = getIncomers(animationNode, allNodes, allEdges);
+            characterNode = animationIncomers.find(n => n.data.nodeType === 'character');
+            break; 
         }
+        currentNode = parentNode;
+      }
 
-        const stageNodes = getOutgoers(animationNode, allNodes, allEdges).filter(n => n.data.nodeType === 'stage');
+      if (!characterNode || !animationNode) {
+        throw new Error("A Character and an Animation node must be connected in sequence to the keyframes.");
+      }
+      
+      if (keyframes.length === 0) {
+        throw new Error("At least one Keyframe node must be in the sequence.");
+      }
 
-        if (stageNodes.length === 0) {
-            throw new Error("At least one Stage node must be connected from the Animation node.");
+      // Add keyframe numbers
+      const numberedKeyframes = keyframes.map((kf, index) => ({
+          ...kf,
+          keyframe_number: index + 1,
+      }));
+
+      const promptData = {
+        sprite_sheet: {
+          style: "Pixel art",
+          canvas: {
+            size: "64x64 pixels",
+            background: "transparent",
+            consistency: "same pose alignment, proportions, and framing across all keyframes"
+          },
+          character: {
+            identity: characterNode.data.fields.find((f:any) => f.id === 'identity').value,
+            base_pose: characterNode.data.fields.find((f:any) => f.id === 'base_pose').value,
+          },
+          animation: {
+            title: animationNode.data.fields.find((f:any) => f.id === 'title').value,
+          },
+          keyframes: numberedKeyframes,
         }
-        
-        const keyframes = [];
-        for (const stageNode of stageNodes) {
-            const stageOutgoers = getOutgoers(stageNode, allNodes, allEdges);
-            const keyframeNodes = stageOutgoers.filter(n => n.data.nodeType === 'keyframe');
-            
-            for (const keyframeNode of keyframeNodes) {
-                 keyframes.push({
-                    keyframe_number: keyframes.length + 1,
-                    stage: stageNode.data.fields.find((f:any) => f.id === 'stage_number')?.value,
-                    description: keyframeNode.data.fields.find((f:any) => f.id === 'description')?.value,
-                 });
-            }
-        }
+      };
 
-        if (keyframes.length === 0) {
-            throw new Error("At least one Keyframe node must be connected to a Stage node.");
-        }
+      const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData) });
+      const { assetDataUri } = result;
 
-        const promptData = {
-          sprite_sheet: {
-            style: "Pixel art",
-            canvas: {
-              size: "64x64 pixels",
-              background: "transparent",
-              consistency: "same pose alignment, proportions, and framing across all keyframes"
-            },
-            character: {
-              identity: characterNode.data.fields.find((f:any) => f.id === 'identity').value,
-              base_pose: characterNode.data.fields.find((f:any) => f.id === 'base_pose').value,
-            },
-            animation: {
-              title: animationNode.data.fields.find((f:any) => f.id === 'title').value,
-              stages: stageNodes.map(sn => ({
-                  stage_number: sn.data.fields.find((f:any) => f.id === 'stage_number').value,
-                  label: sn.data.fields.find((f:any) => f.id === 'label').value,
-                  description: sn.data.fields.find((f:any) => f.id === 'description').value,
-              })),
-            },
-            keyframes,
-          }
-        };
-
-        const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData) });
-        const { assetDataUri } = result;
-
-        setReactFlowNodes(nds => 
-            nds.map(n => {
-                if (n.id === nodeId) {
-                    return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
-                }
-                return n;
-            })
-        );
+      setReactFlowNodes(nds => 
+          nds.map(n => {
+              if (n.id === nodeId) {
+                  return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
+              }
+              return n;
+          })
+      );
     } catch (error: any) {
         console.error("Generation failed:", error);
         toast({
@@ -152,12 +148,7 @@ function Canvas() {
             description: error.message || "There was an error generating the asset. Please try again.",
         });
         setReactFlowNodes(nds => 
-            nds.map(n => {
-                if (n.id === nodeId) {
-                    return { ...n, data: { ...n.data, loading: false } };
-                }
-                return n;
-            })
+            nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: false } } : n)
         );
     } finally {
         setReactFlowEdges(eds => 

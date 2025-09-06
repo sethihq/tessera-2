@@ -4,7 +4,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, ImageIcon, Scissors, User, Bot, Layers, Frame, ToyBrick } from 'lucide-react';
+import { Workflow, Text, ImageIcon, Scissors, User, Bot, Frame, ToyBrick } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 const legoBlocks = {
@@ -29,19 +29,6 @@ const legoBlocks = {
         label: 'Animation',
         fields: [
           { id: 'title', label: 'Title', type: 'text', value: 'casting fireball spell' },
-        ]
-      }
-    },
-    { 
-      label: 'Stage', 
-      nodeType: 'stage', 
-      icon: Layers,
-      data: {
-        label: 'Stage',
-        fields: [
-          { id: 'stage_number', label: 'Stage Number', type: 'number', value: '1' },
-          { id: 'label', label: 'Label', type: 'text', value: 'Setup' },
-          { id: 'description', label: 'Description', type: 'textarea', value: 'character preparing the action' },
         ]
       }
     },
@@ -82,26 +69,16 @@ const workflows = [
             nodes: [
                 { id: 'char', type: 'input', position: { x: 0, y: 0 }, data: { label: 'Character', nodeType: 'character', fields: [{ id: 'identity', label: 'Identity', type: 'textarea', value: 'a knight with shining armor' }, { id: 'base_pose', label: 'Base Pose', type: 'text', value: 'standing, facing forward' }] } },
                 { id: 'anim', type: 'input', position: { x: 0, y: 250 }, data: { label: 'Animation', nodeType: 'animation', fields: [{ id: 'title', label: 'Title', type: 'text', value: 'sword swing' }] } },
-                { id: 'stage', type: 'input', position: { x: 0, y: 500 }, data: { label: 'Stage', nodeType: 'stage', fields: [{ id: 'stage_number', label: 'Stage Number', type: 'number', value: '1' }, { id: 'label', label: 'Label', type: 'text', value: 'Anticipation' }, { id: 'description', label: 'Description', type: 'textarea', value: 'knight raises sword' }] } },
-                { id: 'keyframe1', type: 'input', position: { x: 0, y: 750 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is halfway up' }] } },
-                { id: 'keyframe2', type: 'input', position: { x: 0, y: 960 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is at the peak of its backswing' }] } },
-                { id: 'keyframe3', type: 'input', position: { x: 0, y: 1170 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is swinging forward' }] } },
-                { id: 'keyframe4', type: 'input', position: { x: 0, y: 1380 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is at its furthest point forward' }] } },
-                { id: 'keyframe5', type: 'input', position: { x: 0, y: 1590 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is returning to rest' }] } },
-                { id: 'keyframe6', type: 'input', position: { x: 0, y: 1800 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is back in its initial position' }] } },
-                { id: 'gen', type: 'output', position: { x: 400, y: 250 }, data: { label: 'Asset Generator', nodeType: 'asset-generator', image: null, loading: false } },
-                { id: 'gif', type: 'output', position: { x: 800, y: 250 }, data: { label: 'Generate GIF', nodeType: 'generate-gif', image: null, loading: false } },
+                { id: 'keyframe1', type: 'input', position: { x: 0, y: 460 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'knight raises sword' }] } },
+                { id: 'keyframe2', type: 'input', position: { x: 0, y: 670 }, data: { label: 'Keyframe', nodeType: 'keyframe', fields: [{ id: 'description', label: 'Description', type: 'textarea', value: 'sword is at the peak of its backswing' }] } },
+                { id: 'gen', type: 'output', position: { x: 0, y: 880 }, data: { label: 'Asset Generator', nodeType: 'asset-generator', image: null, loading: false } },
+                { id: 'gif', type: 'output', position: { x: 400, y: 880 }, data: { label: 'Generate GIF', nodeType: 'generate-gif', image: null, loading: false } },
             ],
             edges: [
                 { id: 'e-char-anim', source: 'char', target: 'anim' },
-                { id: 'e-anim-stage', source: 'anim', target: 'stage', sourceHandle: 'stage-out' },
-                { id: 'e-stage-keyframe1', source: 'stage', target: 'keyframe1' },
-                { id: 'e-stage-keyframe2', source: 'stage', target: 'keyframe2' },
-                { id: 'e-stage-keyframe3', source: 'stage', target: 'keyframe3' },
-                { id: 'e-stage-keyframe4', source: 'stage', target: 'keyframe4' },
-                { id: 'e-stage-keyframe5', source: 'stage', target: 'keyframe5' },
-                { id: 'e-stage-keyframe6', source: 'stage', target: 'keyframe6' },
-                { id: 'e-anim-gen', source: 'anim', target: 'gen', sourceHandle: 'asset-out' },
+                { id: 'e-anim-keyframe1', source: 'anim', target: 'keyframe1' },
+                { id: 'e-keyframe1-keyframe2', source: 'keyframe1', target: 'keyframe2' },
+                { id: 'e-keyframe2-gen', source: 'keyframe2', target: 'gen' },
                 { id: 'e-gen-gif', source: 'gen', target: 'gif' },
             ],
         },
