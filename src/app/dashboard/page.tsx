@@ -52,7 +52,7 @@ function Canvas() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [activeTool, setActiveTool] = useState<Tool>('select');
   const { toast } = useToast();
-  const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges, getNode } = useReactFlow();
+  const { getNodes, setNodes: setReactFlowNodes, getEdges, setEdges: setReactFlowEdges, getNode } from useReactFlow();
 
  const handleGenerate = useCallback(async (nodeId: string) => {
     const allNodes = getNodes();
@@ -135,7 +135,8 @@ function Canvas() {
 
       const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData, null, 2) });
       const { assetDataUri } = result;
-
+      
+      // Update the generator node with the new image
       setReactFlowNodes(nds => 
           nds.map(n => {
               if (n.id === nodeId) {
@@ -144,6 +145,24 @@ function Canvas() {
               return n;
           })
       );
+      
+      // After generating, find any connected GIF node and pass the image to it.
+      const outgoingEdges = allEdges.filter(e => e.source === nodeId);
+      if (outgoingEdges.length > 0) {
+        const connectedNodeId = outgoingEdges[0].target;
+        const connectedNode = allNodes.find(n => n.id === connectedNodeId);
+        if (connectedNode && connectedNode.data.nodeType === 'generate-gif') {
+          setReactFlowNodes(nds => 
+            nds.map(n => {
+              if (n.id === connectedNodeId) {
+                return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } }; // also clear any old GIF
+              }
+              return n;
+            })
+          );
+        }
+      }
+
     } catch (error: any) {
         console.error("Generation failed:", error);
         toast({
@@ -243,20 +262,19 @@ function Canvas() {
     (params: Edge | Connection) => {
         const newEdge = { ...params };
         const allNodes = getNodes();
+        const sourceNode = allNodes.find(n => n.id === params.source);
         const targetNode = allNodes.find(n => n.id === params.target);
         
-        if (targetNode?.data.nodeType === 'generate-gif') {
-            const sourceNode = allNodes.find(n => n.id === params.source);
-            if (sourceNode?.data.image) {
-                 setReactFlowNodes(nds => 
-                    nds.map(n => {
-                        if (n.id === targetNode.id) {
-                            return { ...n, data: { ...n.data, sourceImage: sourceNode.data.image } };
-                        }
-                        return n;
-                    })
-                );
-            }
+        if (targetNode?.data.nodeType === 'generate-gif' && sourceNode?.data.image) {
+            setReactFlowNodes(nds => 
+                nds.map(n => {
+                    if (n.id === targetNode.id) {
+                        // Pass the source image and clear any old GIF
+                        return { ...n, data: { ...n.data, sourceImage: sourceNode.data.image, image: null } };
+                    }
+                    return n;
+                })
+            );
         }
 
         setEdges((eds) => addEdge(newEdge, eds));
@@ -304,8 +322,8 @@ function Canvas() {
           newEdges.push({
             ...edge,
             id: `e${idMap.get(edge.source)}-${idMap.get(edge.target)}`,
-            source: idMap.get(edge.source),
-            target: idMap.get(edge.target),
+            source: idMap.get(edge.source)!,
+            target: idMap.get(edge.target)!,
           });
         });
 
@@ -505,5 +523,3 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
-
-    

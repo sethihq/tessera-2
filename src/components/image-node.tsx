@@ -48,8 +48,8 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
 
 
   const sourceNodeImage = sourceNode?.data.image;
+  const displayImage = data.image || data.sourceImage;
   
-  // The generate button for an asset generator is active if its direct parent is a keyframe node.
   const isAssetGeneratorReady = data.nodeType === 'asset-generator' && sourceNode?.data.nodeType === 'keyframe';
 
   const handleGenerateClick = () => {
@@ -76,21 +76,13 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
       <div className="p-4 flex flex-col items-center justify-center gap-4 min-h-[200px]">
         {data.loading ? (
           <Skeleton className="w-[250px] h-[250px] bg-neutral-700" />
-        ) : data.image ? (
+        ) : displayImage ? (
           <Image
-            src={data.image}
+            src={displayImage}
             alt={data.label}
             width={300}
             height={300}
             className="rounded-md"
-          />
-        ) : isGifNode && sourceNodeImage ? (
-           <Image
-            src={sourceNodeImage}
-            alt="Source for GIF"
-            width={300}
-            height={300}
-            className="rounded-md opacity-50"
           />
         ) : (
           <div className="text-neutral-400 text-sm text-center px-6">
@@ -98,7 +90,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
           </div>
         )}
 
-        {isGifNode && (sourceNodeImage || data.image) && !data.loading && (
+        {isGifNode && (data.sourceImage || data.image) && !data.loading && (
           <div className="w-full space-y-2 pt-4">
             <Label htmlFor="grid-size" className="text-xs font-medium text-neutral-400">Sprite Grid</Label>
             <Select value={gridSize} onValueChange={setGridSize}>
@@ -117,8 +109,8 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         
       </div>
        <div className="p-4 pt-0">
-        {(isGifNode && sourceNodeImage) || isAssetGeneratorReady ? (
-          <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
+        {(isGifNode && data.sourceImage) || isAssetGeneratorReady ? (
+          <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !data.sourceImage)}>
             {data.nodeType === 'asset-generator' ? <Workflow className="mr-2 h-4 w-4" /> : <Scissors className="mr-2 h-4 w-4" />}
             {data.nodeType === 'asset-generator' ? 'Generate' : 'Generate GIF'}
           </Button>
