@@ -345,25 +345,32 @@ function Canvas() {
   
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key.toLowerCase() === 'd') {
-        event.preventDefault();
-        const selectedNodes = nodes.filter((n) => n.selected);
-        if (selectedNodes.length === 1) {
-          const nodeToDuplicate = selectedNodes[0];
-          const newNode: Node = {
-            id: getId(),
-            type: nodeToDuplicate.type,
-            position: {
-              x: nodeToDuplicate.position.x + 20,
-              y: nodeToDuplicate.position.y + 20,
-            },
-            data: { ...nodeToDuplicate.data },
-          };
-          setNodes((nds) => nds.concat(newNode));
+      const allNodes = getNodes();
+
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key.toLowerCase() === 'a') {
+          event.preventDefault();
+          setReactFlowNodes(allNodes.map(n => ({...n, selected: true})));
+        } else if (event.key.toLowerCase() === 'd') {
+          event.preventDefault();
+          const selectedNodes = allNodes.filter((n) => n.selected);
+          if (selectedNodes.length === 1) {
+            const nodeToDuplicate = selectedNodes[0];
+            const newNode: Node = {
+              id: getId(),
+              type: nodeToDuplicate.type,
+              position: {
+                x: nodeToDuplicate.position.x + 20,
+                y: nodeToDuplicate.position.y + 20,
+              },
+              data: { ...nodeToDuplicate.data },
+            };
+            setReactFlowNodes((nds) => nds.concat(newNode));
+          }
         }
       }
     },
-    [nodes, setNodes]
+    [getNodes, setReactFlowNodes]
   );
 
   return (
@@ -514,3 +521,5 @@ export function DashboardPageContent() {
     </main>
   );
 }
+
+    
