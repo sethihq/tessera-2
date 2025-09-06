@@ -28,33 +28,10 @@ export async function createGifFromSpriteSheet(
   }
 
   const encoder = new GIFEncoder(frameWidth, frameHeight);
-
   const stream = encoder.createReadStream();
   
-  // Start the encoding process
-  encoder.start();
-  encoder.setRepeat(0); // 0 for repeat
-  encoder.setDelay(1000 / frameRate);
-  encoder.setQuality(10); // Lower is better quality
-
-  // Process each frame sequentially
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < columns; x++) {
-      const frameBuffer = await image
-        .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
-        .ensureAlpha()
-        .raw()
-        .toBuffer();
-      
-      encoder.addFrame(frameBuffer as any);
-    }
-  }
-
-  // Finish encoding
-  encoder.finish();
-  
-  // Use a promise to wait for the stream to finish
-  return new Promise((resolve, reject) => {
+  // This promise will resolve when the stream is finished
+  const gifPromise = new Promise<string>((resolve, reject) => {
     const chunks: Buffer[] = [];
     stream.on('data', (chunk) => chunks.push(chunk as Buffer));
     stream.on('end', () => {
@@ -62,8 +39,33 @@ export async function createGifFromSpriteSheet(
       resolve(`data:image/gif;base64,${gifBuffer.toString('base64')}`);
     });
     stream.on('error', (err) => {
-        console.error('Error generating GIF:', err);
+        console.error('Error generating GIF stream:', err);
         reject(new Error('Failed to generate GIF from sprite sheet.'));
     });
   });
+
+  // Start the encoding process
+  encoder.start();
+  encoder.setRepeat(0); // 0 for infinite repeat
+  encoder.setDelay(1000 / frameRate);
+  encoder.setQuality(10); // 1-20, lower is better
+
+  // Process each frame sequentially and add to the encoder
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      const frameBuffer = await image
+        .extract({ left: x * frameWidth, top: y * frameHeight, width: frameWidth, height: frameHeight })
+        .ensureAlpha() // Ensure transparency is handled
+        .raw()
+        .toBuffer();
+      
+      encoder.addFrame(frameBuffer as any);
+    }
+  }
+
+  // Finish encoding and trigger the 'end' event on the stream
+  encoder.finish();
+  
+  // Wait for the stream to complete and return the result
+  return gifPromise;
 }
