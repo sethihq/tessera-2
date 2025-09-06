@@ -38,20 +38,18 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   const connectionNodeId = useStore(connectionNodeIdSelector);
   const isTarget = connectionNodeId && connectionNodeId !== id;
 
-  const hasSourceConnection = useMemo(() => {
+  const sourceNode = useMemo(() => {
+    if (!id) return null;
     const edges = getEdges();
-    return edges.some(edge => edge.target === id);
-  }, [id, getEdges]);
-
-  const sourceNodeImage = useMemo(() => {
-    if (!hasSourceConnection) return null;
     const nodes = getNodes();
-    const edges = getEdges();
     const incomerEdge = edges.find(e => e.target === id);
     if (!incomerEdge) return null;
-    const incomerNode = nodes.find(n => n.id === incomerEdge.source);
-    return incomerNode?.data.image;
-  }, [id, getNodes, getEdges, hasSourceConnection]);
+    return nodes.find(n => n.id === incomerEdge.source);
+  }, [id, getEdges, getNodes]);
+
+  const sourceNodeImage = sourceNode?.data.image;
+  const isSourceAnimationNode = sourceNode?.data.nodeType === 'animation';
+  
 
   const handleGenerateClick = () => {
     if (nodeId) {
@@ -119,7 +117,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         
       </div>
        <div className="p-4 pt-0">
-        {(isGifNode && sourceNodeImage) || (isGeneratorNode && hasSourceConnection) ? (
+        {(isGifNode && sourceNodeImage) || (isGeneratorNode && isSourceAnimationNode) ? (
           <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
             {isGeneratorNode ? <Workflow className="mr-2 h-4 w-4" /> : <Scissors className="mr-2 h-4 w-4" />}
             {isGeneratorNode ? 'Generate' : 'Generate GIF'}
