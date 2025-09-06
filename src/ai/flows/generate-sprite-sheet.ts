@@ -5,7 +5,7 @@
  *
  * - generateSpriteSheet - A function that generates a sprite sheet based on a JSON prompt.
  * - GenerateSpriteSheetInput - The input type for the generateSpriteSheet function.
- * - GenerateSpriteSheetOutput - The return type for the generateSpriteSheet function.
+ * - GenerateSpriteSheetOutput - The return type for the generateSpritesheet function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -32,9 +32,13 @@ const generateSpriteSheetFlow = ai.defineFlow(
     outputSchema: GenerateSpriteSheetOutputSchema,
   },
   async (input) => {
+    const promptData = JSON.parse(input.prompt);
+    const keyframeCount = promptData.sprite_sheet.keyframes.length;
+
     const imageGenerationPrompt = `
       You are an expert pixel artist. Create a sprite sheet based on the following JSON object.
-      The output should be a single image containing all the keyframes arranged in a grid.
+      The output MUST be a single image containing exactly ${keyframeCount} keyframes, no more, no less.
+      The frames should be arranged in a logical grid that accommodates all ${keyframeCount} frames (e.g., a 3x2 grid for 6 frames).
       Pay close attention to all 'consistency' requirements to ensure all keyframes are perfectly aligned as if using onion skinning.
 
       ${input.prompt}
