@@ -1,10 +1,9 @@
 
 'use client';
 import { Handle, Position, useReactFlow, useNodeId, useStore } from 'reactflow';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from './ui/button';
-import { Scissors, X, Sparkles } from 'lucide-react';
+import { Scissors, X, Sparkles, Workflow } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -68,14 +67,14 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   const isGeneratorNode = data.nodeType === 'asset-generator';
 
   return (
-    <Card className={`w-80 ${isTarget ? 'border-primary' : ''}`}>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">{data.label}</CardTitle>
+    <div className={`w-80 rounded-lg border bg-background text-foreground shadow-sm ${isTarget ? 'border-primary' : ''}`}>
+      <div className="flex flex-row items-center justify-between p-6 pb-0">
+        <div className="text-base font-semibold leading-none tracking-tight">{data.label}</div>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
-      </CardHeader>
-      <CardContent className="min-h-40 flex flex-col items-center justify-center gap-4">
+      </div>
+      <div className="p-6 pt-0 min-h-40 flex flex-col items-center justify-center gap-4">
         {data.loading ? (
           <Skeleton className="w-[250px] h-[250px]" />
         ) : data.image ? (
@@ -118,15 +117,15 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         )}
         <Handle type="source" position={Position.Bottom} />
         <Handle type="target" position={Position.Top} />
-      </CardContent>
+      </div>
        {(isGifNode && sourceNodeImage) || isGeneratorNode && (
-        <CardFooter>
+        <div className="flex items-center p-6 pt-0">
           <Button className="w-full" onClick={handleGenerateClick} disabled={data.loading || (isGifNode && !sourceNodeImage)}>
-            {isGifNode ? <Scissors className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            {isGifNode ? <Scissors className="mr-2 h-4 w-4" /> : <Workflow className="mr-2 h-4 w-4" />}
             {isGifNode ? 'Generate GIF' : 'Generate'}
           </Button>
-        </CardFooter>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

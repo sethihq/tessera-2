@@ -2,7 +2,6 @@
 'use client';
 import { useCallback } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { Input } from './ui/input';
@@ -53,14 +52,14 @@ export function InputNode({ id, data }: InputNodeProps) {
   }, [nodeId, setNodes, setEdges]);
 
   return (
-    <Card className="w-80">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">{data.label}</CardTitle>
+    <div className="w-80 rounded-lg border bg-background text-foreground shadow-sm">
+      <div className="flex flex-row items-center justify-between p-6 pb-0">
+        <div className="text-base font-semibold leading-none tracking-tight">{data.label}</div>
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </div>
+      <div className="p-6 space-y-4">
         {data.fields.map((field) => (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={field.id}>{field.label}</Label>
@@ -84,7 +83,7 @@ export function InputNode({ id, data }: InputNodeProps) {
         ))}
         {data.nodeType === 'animation' ? (
           <>
-            <Handle type="target" position={Position.Top} />
+            <Handle type="target" position={Position.Left} />
             <Handle type="source" position={Position.Right} />
             <Handle type="source" position={Position.Bottom} />
           </>
@@ -94,7 +93,7 @@ export function InputNode({ id, data }: InputNodeProps) {
             <Handle type="target" position={Position.Top} />
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
