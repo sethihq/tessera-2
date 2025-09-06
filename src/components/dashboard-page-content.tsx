@@ -70,7 +70,6 @@ function Canvas() {
     );
 
     try {
-      const keyframes: any[] = [];
       let currentNode: Node | undefined = generatorNode;
       let characterNode: Node | undefined;
       let animationNode: Node | undefined;
@@ -154,7 +153,11 @@ function Canvas() {
           setReactFlowNodes(nds => 
             nds.map(n => {
               if (n.id === connectedNodeId) {
-                return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } }; // also clear any old GIF
+                // Pass the source image and clear any old GIF
+                return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } }; 
+              } else if (n.id === nodeId) {
+                // Ensure the generator node also gets the image
+                return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
               }
               return n;
             })
@@ -186,24 +189,14 @@ function Canvas() {
     const gifNode = allNodes.find(n => n.id === nodeId);
     if (!gifNode) return;
     
-    const incomers = getIncomers(gifNode, allNodes, allEdges);
-    if (incomers.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: "GIF Generation Error",
-        description: "Please connect an image node to the Generate GIF node.",
-      });
-      return;
-    }
-
-    const sourceNode = incomers[0];
-    const sourceImageUri = sourceNode.data.image;
+    // Use the sourceImage from the node's data, which was passed on connection/generation
+    const sourceImageUri = gifNode.data.sourceImage;
 
     if (!sourceImageUri) {
        toast({
         variant: 'destructive',
         title: "GIF Generation Error",
-        description: "The connected source node does not have an image.",
+        description: "The connected source node does not have an image. Please generate or connect an image.",
       });
       return;
     }
