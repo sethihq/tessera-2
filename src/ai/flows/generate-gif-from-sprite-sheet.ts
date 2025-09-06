@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { createGifFromSpriteSheet } from '@/lib/gif-generator';
 
 const GenerateGifFromSpriteSheetInputSchema = z.object({
   sourceImageUri: z
@@ -37,30 +38,11 @@ const generateGifFromSpriteSheetFlow = ai.defineFlow(
     outputSchema: GenerateGifFromSpriteSheetOutputSchema,
   },
   async (input) => {
+    const [columns, rows] = input.grid.split('x').map(Number);
+    const base64Image = input.sourceImageUri.split(',')[1];
     
-    const generationPrompt = `
-        You are an expert animator. Take the provided sprite sheet image and convert it into an animated GIF.
-        The sprite sheet is organized in a ${input.grid} grid.
-        You must slice the image into frames based on this grid and create an animation sequence starting from the top-left frame and proceeding from left-to-right, top-to-bottom.
-        The output must be a single animated GIF.
-    `;
+    const gifDataUri = await createGifFromSpriteSheet(base64Image, columns, rows);
 
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-image-preview',
-      prompt: [
-        {media: {url: input.sourceImageUri}},
-        {text: generationPrompt},
-      ],
-      config: {
-        responseMimeType: 'image/gif',
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    });
-
-    if (!media) {
-      throw new Error('No GIF was generated from the sprite sheet.');
-    }
-
-    return { assetDataUri: media.url! };
+    return { assetDataUri: gifDataUri };
   }
 );
