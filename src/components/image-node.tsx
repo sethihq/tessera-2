@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Scissors, X, Workflow } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Skeleton } from './ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from './ui/input';
 import { Label } from './ui/label';
 
 const connectionNodeIdSelector = (state: any) => state.connectionNodeId;
@@ -85,17 +85,13 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         {isGifNode && (data.sourceImage || data.image) && !data.loading && (
           <div className="w-full space-y-2 pt-4">
             <Label htmlFor="grid-size" className="text-xs font-medium text-neutral-400">Sprite Grid</Label>
-            <Select value={gridSize} onValueChange={setGridSize}>
-              <SelectTrigger id="grid-size" className="bg-neutral-800 border-neutral-700 text-white focus:ring-primary">
-                <SelectValue placeholder="Select grid size" />
-              </SelectTrigger>
-              <SelectContent className="bg-neutral-900 border-neutral-700 text-white">
-                <SelectItem value="2x2">2x2</SelectItem>
-                <SelectItem value="3x3">3x3</SelectItem>
-                <SelectItem value="4x4">4x4</SelectItem>
-                 <SelectItem value="8x8">8x8</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              id="grid-size"
+              placeholder="e.g., 4x4"
+              value={gridSize}
+              onChange={(e) => setGridSize(e.target.value)}
+              className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+            />
           </div>
         )}
         
@@ -113,5 +109,3 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
     </div>
   );
 }
-
-    
