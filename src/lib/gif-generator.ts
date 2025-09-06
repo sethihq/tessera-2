@@ -28,7 +28,7 @@ export async function createGifFromSpriteSheet(
     throw new Error('Could not read image dimensions from sprite sheet.');
   }
 
-  // **THE FIX**: Calculate the largest dimensions that are perfectly divisible by the grid.
+  // Calculate the largest dimensions that are perfectly divisible by the grid.
   const newWidth = Math.floor(originalWidth / columns) * columns;
   const newHeight = Math.floor(originalHeight / rows) * rows;
 
