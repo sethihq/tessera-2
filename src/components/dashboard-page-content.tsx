@@ -133,32 +133,28 @@ function Canvas() {
 
       const result = await generateSpriteSheet({ prompt: JSON.stringify(promptData, null, 2) });
       const { assetDataUri } = result;
-      
-      setReactFlowNodes(nds => 
-          nds.map(n => {
-              if (n.id === nodeId) {
-                  return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
-              }
-              return n;
-          })
+
+      // Find connected GIF nodes to update them in one go
+      const connectedGifNodeIds = new Set(
+        allEdges
+          .filter(e => e.source === nodeId && allNodes.find(n => n.id === e.target)?.data.nodeType === 'generate-gif')
+          .map(e => e.target)
       );
       
-      const outgoingEdges = allEdges.filter(e => e.source === nodeId);
-      for (const edge of outgoingEdges) {
-        const connectedNodeId = edge.target;
-        const connectedNode = allNodes.find(n => n.id === connectedNodeId);
-        if (connectedNode && connectedNode.data.nodeType === 'generate-gif') {
-          setReactFlowNodes(nds => 
-            nds.map(n => {
-              if (n.id === connectedNodeId) {
-                return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } }; 
-              }
-              return n;
-            })
-          );
-        }
-      }
-
+      setReactFlowNodes(nds => 
+        nds.map(n => {
+          // Update the generator node that just finished
+          if (n.id === nodeId) {
+            return { ...n, data: { ...n.data, image: assetDataUri, loading: false } };
+          }
+          // Update any connected GIF nodes
+          if (connectedGifNodeIds.has(n.id)) {
+            return { ...n, data: { ...n.data, sourceImage: assetDataUri, image: null } };
+          }
+          // Return all other nodes unchanged
+          return n;
+        })
+      );
     } catch (error: any) {
         console.error("Generation failed:", error);
         toast({
@@ -506,3 +502,5 @@ export function DashboardPageContent() {
     </main>
   );
 }
+
+    
