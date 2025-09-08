@@ -10,6 +10,8 @@ import {
   Plus,
   Settings,
   Search,
+  FilePlus,
+  Trash2,
 } from "lucide-react";
 import { TesseraLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +20,7 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchModal } from "@/components/search-modal";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 
 const projects = [
     { name: 'My Game', icon: Folder, fileCount: 2, href: '/dashboard' },
@@ -50,6 +53,16 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const handleAddNewFile = () => {
+    console.log('Adding new file to:', selectedProject);
+    // This would typically trigger a state update to add a file
+  };
+
+  const handleDeleteProject = (projectName: string) => {
+    console.log('Deleting project:', projectName);
+    // This would typically trigger a state update to remove the project
+  };
+
   return (
     <div className="grid h-dvh w-full lg:grid-cols-[280px_1fr]">
       <Sidebar>
@@ -80,18 +93,33 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             </div>
              <div className="flex flex-col gap-1 py-2">
                {projects.map(project => (
-                  <Link href={project.href} key={project.name}>
-                    <Button 
-                      variant={
-                        (selectedProject === 'my-game' && project.name === 'My Game') ||
-                        (selectedProject === 'platformer-kit' && project.name === 'Platformer Kit')
-                        ? 'secondary' : 'ghost'
-                      } 
-                      className="justify-start gap-3 px-2 w-full"
-                    >
-                      <project.icon /> {project.name}
-                    </Button>
-                  </Link>
+                 <ContextMenu key={project.name}>
+                    <ContextMenuTrigger>
+                      <Link href={project.href} key={project.name}>
+                        <Button 
+                          variant={
+                            (selectedProject === 'my-game' && project.name === 'My Game') ||
+                            (selectedProject === 'platformer-kit' && project.name === 'Platformer Kit')
+                            ? 'secondary' : 'ghost'
+                          } 
+                          className="justify-start gap-3 px-2 w-full"
+                        >
+                          <project.icon /> {project.name}
+                        </Button>
+                      </Link>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                        <ContextMenuItem onClick={handleAddNewFile}>
+                            <FilePlus className="mr-2 h-4 w-4" />
+                            Add New File
+                        </ContextMenuItem>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem className="text-destructive" onClick={() => handleDeleteProject(project.name)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Project
+                        </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                ))}
             </div>
           </nav>

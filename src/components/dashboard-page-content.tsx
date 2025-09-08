@@ -32,8 +32,9 @@ import { Button } from '@/components/ui/button';
 import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
-import { Plus } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { CustomEdge } from '@/components/custom-edge';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 
 
 const initialNodes: Node[] = [];
@@ -390,9 +391,10 @@ function Canvas() {
   );
 }
 
-const allFiles = {
+const initialFiles = {
     'my-game': [
         {
+            id: '1',
             name: 'Main Scene',
             project: 'My Game',
             href: '/dashboard?file=main-scene',
@@ -401,6 +403,7 @@ const allFiles = {
             lastUpdated: '2 hours ago',
         },
         {
+            id: '2',
             name: 'Character Sprites',
             project: 'My Game',
             href: '#',
@@ -411,6 +414,7 @@ const allFiles = {
     ],
     'platformer-kit': [
         {
+            id: '3',
             name: 'Tileset',
             project: 'Platformer Kit',
             href: '#',
@@ -419,6 +423,7 @@ const allFiles = {
             lastUpdated: '1 day ago',
         },
         {
+            id: '4',
             name: 'Player Controller',
             project: 'Platformer Kit',
             href: '#',
@@ -427,33 +432,65 @@ const allFiles = {
             lastUpdated: '3 days ago',
         },
     ]
-}
+};
+
+type File = typeof initialFiles['my-game'][0];
+type FileStore = { [key: string]: File[] };
 
 
-function ProjectGrid({ project }: { project: 'my-game' | 'platformer-kit' }) {
-    const files = allFiles[project] || [];
+function ProjectGrid({ project, files, setFiles }: { project: string; files: File[]; setFiles: (files: File[]) => void }) {
+    
+    const handleRename = (fileId: string) => {
+        const newName = prompt('Enter new name:');
+        if (newName) {
+            const updatedFiles = files.map(f => f.id === fileId ? { ...f, name: newName } : f);
+            setFiles(updatedFiles);
+        }
+    };
+
+    const handleDelete = (fileId: string) => {
+        if (confirm('Are you sure you want to delete this file?')) {
+            const updatedFiles = files.filter(f => f.id !== fileId);
+            setFiles(updatedFiles);
+        }
+    };
+    
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {files.map((item, index) => (
-                <Card key={index} className="overflow-hidden transition-all hover:shadow-lg group">
-                  <Link href={item.href} >
-                      <AspectRatio ratio={16/9}>
-                          <Image 
-                              src={item.image} 
-                              alt={item.name} 
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform"
-                              data-ai-hint={item.image_hint}
-                          />
-                      </AspectRatio>
-                      <CardHeader>
-                          <CardTitle>{item.name}</CardTitle>
-                      </CardHeader>
-                      <CardFooter>
-                          <span className="text-sm text-muted-foreground">Updated {item.lastUpdated}</span>
-                      </CardFooter>
-                  </Link>
-                </Card>
+            {files.map((item) => (
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger>
+                  <Card className="overflow-hidden transition-all hover:shadow-lg group">
+                    <Link href={item.href} >
+                        <AspectRatio ratio={16/9}>
+                            <Image 
+                                src={item.image} 
+                                alt={item.name} 
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform"
+                                data-ai-hint={item.image_hint}
+                            />
+                        </AspectRatio>
+                        <CardHeader>
+                            <CardTitle>{item.name}</CardTitle>
+                        </CardHeader>
+                        <CardFooter>
+                            <span className="text-sm text-muted-foreground">Updated {item.lastUpdated}</span>
+                        </CardFooter>
+                    </Link>
+                  </Card>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-48">
+                    <ContextMenuItem onClick={() => handleRename(item.id)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Rename
+                    </ContextMenuItem>
+                    <ContextMenuItem className="text-destructive" onClick={() => handleDelete(item.id)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                    </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
         </div>
     )
@@ -463,6 +500,24 @@ export function DashboardPageContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get('file');
   const project = searchParams.get('project') || 'my-game';
+  const [allFiles, setAllFiles] = useState<FileStore>(initialFiles);
+
+  const handleAddNewFile = () => {
+    const newFile: File = {
+        id: getId(),
+        name: 'Untitled File',
+        project: project,
+        href: '#',
+        image: 'https://picsum.photos/800/600?grayscale',
+        image_hint: 'new file placeholder',
+        lastUpdated: 'Just now',
+    };
+
+    setAllFiles(prevFiles => ({
+        ...prevFiles,
+        [project]: [...(prevFiles[project] || []), newFile]
+    }));
+  };
 
   if (file) {
     return (
@@ -474,17 +529,22 @@ export function DashboardPageContent() {
     );
   }
 
+  const projectFiles = allFiles[project as keyof typeof allFiles] || [];
+  const setProjectFiles = (updatedFiles: File[]) => {
+    setAllFiles(prev => ({ ...prev, [project]: updatedFiles }));
+  }
+
   return (
      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="flex items-center">
             <div className="ml-auto flex items-center gap-2">
-                <Button>
+                <Button onClick={handleAddNewFile}>
                     <Plus className="mr-2 h-4 w-4" />
                     New File
                 </Button>
             </div>
         </div>
-        <ProjectGrid project={project as any} />
+        <ProjectGrid project={project} files={projectFiles} setFiles={setProjectFiles} />
     </main>
   );
 }
