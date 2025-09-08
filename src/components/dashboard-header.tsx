@@ -3,7 +3,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "./ui/button";
-import { Share2, Home, Search } from "lucide-react";
+import { Share2, Home } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,11 +14,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Input } from "./ui/input";
 
 export function DashboardHeader() {
   const searchParams = useSearchParams();
   const fileOpen = searchParams.get('file');
+
+  const projectName = searchParams.get('project') === 'platformer-kit' ? 'Platformer Kit' : 'My Game';
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
@@ -31,7 +32,7 @@ export function DashboardHeader() {
             <BreadcrumbList>
               <BreadcrumbItem>
                  <BreadcrumbLink asChild>
-                  <Link href="/dashboard">My Game</Link>
+                  <Link href="/dashboard">{projectName}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -42,18 +43,10 @@ export function DashboardHeader() {
           </Breadcrumb>
         </div>
       ) : (
-        <h1 className="text-xl font-semibold md:text-2xl">Projects</h1>
+        <h1 className="text-xl font-semibold md:text-2xl">{projectName}</h1>
       )}
 
-      <div className="relative ml-auto flex-1 md:grow-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-          />
-        </div>
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         <Button variant="outline">
           <Share2 className="mr-2 h-4 w-4" />
           Share

@@ -1,15 +1,15 @@
+
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   Folder,
-  File,
   Plus,
-  Home,
   Settings,
+  Search,
 } from "lucide-react";
 import { TesseraLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,11 +17,39 @@ import { Button } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SearchModal } from "@/components/search-modal";
 
+const projects = [
+    { name: 'My Game', icon: Folder, fileCount: 2, href: '/dashboard' },
+    { name: 'Platformer Kit', icon: Folder, fileCount: 2, href: '/dashboard?project=platformer-kit' },
+];
 
 function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const fileOpen = searchParams.get('file');
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const selectedProject = searchParams.get('project') || 'my-game';
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || e.key === "/") {
+        if (
+          (e.target instanceof HTMLElement && e.target.isContentEditable) ||
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement
+        ) {
+          return
+        }
+
+        e.preventDefault()
+        setIsSearchModalOpen((open) => !open)
+      }
+    }
+
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
 
   if (fileOpen) {
     return (
@@ -30,6 +58,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
         <main className="flex-1">
             {children}
         </main>
+        <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
       </div>
     )
   }
@@ -45,35 +74,38 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
         </SidebarHeader>
         <SidebarContent className="p-2">
            <nav className="grid items-start text-sm font-medium">
+             <div className="p-2">
+                <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setIsSearchModalOpen(true)}>
+                    <Search className="mr-2 h-4 w-4" />
+                    Search...
+                    <kbd className="pointer-events-none ml-auto inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                        <span className="text-xs">⌘</span>K
+                    </kbd>
+                </Button>
+            </div>
             <div className="flex items-center justify-between py-2 px-2">
               <h2 className="text-lg font-semibold tracking-tight">
                 Projects
               </h2>
-              <Button size="sm">
+              <Button size="icon" variant="ghost">
                 <Plus className="h-4 w-4" /> 
               </Button>
             </div>
-             <div className="flex flex-col gap-1 py-4">
-              <Button variant="ghost" className="justify-start gap-3 px-2">
-                <Folder /> My Game
-              </Button>
-              <Button variant="secondary" className="justify-start gap-3 pl-10 w-full" asChild>
-                <Link href="/dashboard?file=main-scene"><File /> Main Scene</Link>
-              </Button>
-              <Button variant="ghost" className="justify-start gap-3 pl-10">
-                <File /> Character Sprites
-              </Button>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Button variant="ghost" className="justify-start gap-3 px-2">
-                <Folder /> Platformer Kit
-              </Button>
-               <Button variant="ghost" className="justify-start gap-3 pl-10">
-                  <File /> Tileset
-                </Button>
-                <Button variant="ghost" className="justify-start gap-3 pl-10">
-                  <File /> Player Controller
-                </Button>
+             <div className="flex flex-col gap-1 py-2">
+               {projects.map(project => (
+                  <Link href={project.href} key={project.name}>
+                    <Button 
+                      variant={
+                        (selectedProject === 'my-game' && project.name === 'My Game') ||
+                        (selectedProject === 'platformer-kit' && project.name === 'Platformer Kit')
+                        ? 'secondary' : 'ghost'
+                      } 
+                      className="justify-start gap-3 px-2 w-full"
+                    >
+                      <project.icon /> {project.name}
+                    </Button>
+                  </Link>
+               ))}
             </div>
           </nav>
         </SidebarContent>
@@ -119,10 +151,11 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
       </Sidebar>
        <div className="flex flex-col">
         <DashboardHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/40">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/10">
             {children}
         </main>
       </div>
+       <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
     </div>
   );
 }

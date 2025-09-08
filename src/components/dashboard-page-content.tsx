@@ -33,7 +33,6 @@ import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomEdge } from '@/components/custom-edge';
 
 
@@ -391,68 +390,67 @@ function Canvas() {
   );
 }
 
-const projects = [
-    {
-        name: 'Main Scene',
-        project: 'My Game',
-        href: '/dashboard?file=main-scene',
-        image: 'https://picsum.photos/800/600',
-        image_hint: 'game level',
-        lastUpdated: '2 hours ago',
-        type: 'Personal'
-    },
-    {
-        name: 'Character Sprites',
-        project: 'My Game',
-        href: '#',
-        image: 'https://picsum.photos/800/600',
-        image_hint: 'character sprite sheet',
-        lastUpdated: '5 hours ago',
-        type: 'Personal'
-    },
-    {
-        name: 'Tileset',
-        project: 'Platformer Kit',
-        href: '#',
-        image: 'https://picsum.photos/800/600',
-        image_hint: 'game tileset',
-        lastUpdated: '1 day ago',
-        type: 'Kit'
-    },
-    {
-        name: 'Player Controller',
-        project: 'Platformer Kit',
-        href: '#',
-        image: 'https://picsum.photos/800/600',
-        image_hint: 'game character',
-        lastUpdated: '3 days ago',
-        type: 'Kit'
-    },
-]
+const allFiles = {
+    'my-game': [
+        {
+            name: 'Main Scene',
+            project: 'My Game',
+            href: '/dashboard?file=main-scene',
+            image: 'https://picsum.photos/800/600',
+            image_hint: 'game level',
+            lastUpdated: '2 hours ago',
+        },
+        {
+            name: 'Character Sprites',
+            project: 'My Game',
+            href: '#',
+            image: 'https://picsum.photos/800/600',
+            image_hint: 'character sprite sheet',
+            lastUpdated: '5 hours ago',
+        },
+    ],
+    'platformer-kit': [
+        {
+            name: 'Tileset',
+            project: 'Platformer Kit',
+            href: '#',
+            image: 'https://picsum.photos/800/600',
+            image_hint: 'game tileset',
+            lastUpdated: '1 day ago',
+        },
+        {
+            name: 'Player Controller',
+            project: 'Platformer Kit',
+            href: '#',
+            image: 'https://picsum.photos/800/600',
+            image_hint: 'game character',
+            lastUpdated: '3 days ago',
+        },
+    ]
+}
 
-function ProjectGrid({ filter }: { filter: 'All' | 'Personal' | 'Kit' }) {
-    const filteredProjects = projects.filter(p => filter === 'All' || p.type === filter);
+
+function ProjectGrid({ project }: { project: 'my-game' | 'platformer-kit' }) {
+    const files = allFiles[project] || [];
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProjects.map((item, index) => (
+            {files.map((item, index) => (
                 <Link href={item.href} key={index}>
-                    <Card className="overflow-hidden transition-all hover:shadow-lg">
+                    <Card className="overflow-hidden transition-all hover:shadow-lg group">
                         <AspectRatio ratio={16/9}>
                             <Image 
                                 src={item.image} 
                                 alt={item.name} 
                                 fill
-                                className="object-cover"
+                                className="object-cover group-hover:scale-105 transition-transform"
                                 data-ai-hint={item.image_hint}
                             />
                         </AspectRatio>
                         <CardHeader>
                             <CardTitle>{item.name}</CardTitle>
-                            <CardDescription>{item.project}</CardDescription>
                         </CardHeader>
                         <CardFooter className="flex justify-between items-center text-sm text-muted-foreground">
                             <span>Updated {item.lastUpdated}</span>
-                            <Badge variant="secondary">{item.type}</Badge>
                         </CardFooter>
                     </Card>
                 </Link>
@@ -464,6 +462,7 @@ function ProjectGrid({ filter }: { filter: 'All' | 'Personal' | 'Kit' }) {
 export function DashboardPageContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get('file');
+  const project = searchParams.get('project') || 'my-game';
 
   if (file) {
     return (
@@ -474,31 +473,16 @@ export function DashboardPageContent() {
   }
 
   return (
-     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-        <Tabs defaultValue="all">
-            <div className="flex items-center">
-                <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="personal">Personal</TabsTrigger>
-                    <TabsTrigger value="kits">Kits</TabsTrigger>
-                </TabsList>
-                <div className="ml-auto flex items-center gap-2">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Project
-                    </Button>
-                </div>
+     <main className="grid flex-1 items-start gap-4 sm:py-0">
+        <div className="flex items-center">
+            <div className="ml-auto flex items-center gap-2">
+                <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New File
+                </Button>
             </div>
-            <TabsContent value="all">
-                <ProjectGrid filter="All" />
-            </TabsContent>
-            <TabsContent value="personal">
-                <ProjectGrid filter="Personal" />
-            </TabsContent>
-            <TabsContent value="kits">
-                <ProjectGrid filter="Kit" />
-            </TabsContent>
-        </Tabs>
+        </div>
+        <ProjectGrid project={project as any} />
     </main>
   );
 }
