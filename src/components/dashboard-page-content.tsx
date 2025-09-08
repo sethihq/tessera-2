@@ -32,7 +32,7 @@ import { Button } from '@/components/ui/button';
 import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Folder } from 'lucide-react';
 import { CustomEdge } from '@/components/custom-edge';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 
@@ -42,8 +42,8 @@ const initialEdges: Edge[] = [];
 
 const proOptions = { hideAttribution: true };
 
-let id = 1;
-const getId = () => `${id++}`;
+let idCounter = 5; // Start from a number higher than initial data
+const getId = () => `${idCounter++}`;
 
 function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -391,13 +391,30 @@ function Canvas() {
   );
 }
 
-const initialFiles = {
+export type Project = { id: string; name: string; icon: React.FC<any>; href: string; };
+export type FileItem = {
+    id: string;
+    name: string;
+    project: string;
+    href: string;
+    image: string;
+    image_hint: string;
+    lastUpdated: string;
+};
+export type FileStore = { [key: string]: FileItem[] };
+
+export const initialProjects: Project[] = [
+    { id: 'my-game', name: 'My Game', icon: Folder, href: '/dashboard?project=my-game' },
+    { id: 'platformer-kit', name: 'Platformer Kit', icon: Folder, href: '/dashboard?project=platformer-kit' },
+];
+
+export const initialFiles: FileStore = {
     'my-game': [
         {
             id: '1',
             name: 'Main Scene',
             project: 'My Game',
-            href: '/dashboard?file=main-scene',
+            href: '/dashboard?project=my-game&file=main-scene',
             image: 'https://picsum.photos/800/600',
             image_hint: 'game level',
             lastUpdated: '2 hours ago',
@@ -434,24 +451,22 @@ const initialFiles = {
     ]
 };
 
-type File = typeof initialFiles['my-game'][0];
-type FileStore = { [key: string]: File[] };
 
 
-function ProjectGrid({ project, files, setFiles }: { project: string; files: File[]; setFiles: (files: File[]) => void }) {
+function ProjectGrid({ project, files, setFiles }: { project: Project; files: FileItem[]; setFiles: (projectId: string, files: FileItem[]) => void }) {
     
     const handleRename = (fileId: string) => {
         const newName = prompt('Enter new name:');
         if (newName) {
             const updatedFiles = files.map(f => f.id === fileId ? { ...f, name: newName } : f);
-            setFiles(updatedFiles);
+            setFiles(project.id, updatedFiles);
         }
     };
 
     const handleDelete = (fileId: string) => {
         if (confirm('Are you sure you want to delete this file?')) {
             const updatedFiles = files.filter(f => f.id !== fileId);
-            setFiles(updatedFiles);
+            setFiles(project.id, updatedFiles);
         }
     };
     
@@ -496,27 +511,40 @@ function ProjectGrid({ project, files, setFiles }: { project: string; files: Fil
     )
 }
 
-export function DashboardPageContent() {
+interface DashboardPageContentProps {
+  projects?: Project[];
+  allFiles?: FileStore;
+  setAllFiles?: (files: FileStore) => void;
+}
+
+export function DashboardPageContent({ projects: layoutProjects, allFiles: layoutAllFiles, setAllFiles: layoutSetAllFiles }: DashboardPageContentProps) {
   const searchParams = useSearchParams();
   const file = searchParams.get('file');
-  const project = searchParams.get('project') || 'my-game';
-  const [allFiles, setAllFiles] = useState<FileStore>(initialFiles);
+  const projectName = searchParams.get('project') || 'my-game';
+  
+  // These props are passed down from the layout
+  const allFiles = layoutAllFiles!;
+  const setAllFiles = layoutSetAllFiles!;
+  const projects = layoutProjects!;
+
+  const selectedProject = projects.find(p => p.id === projectName) || projects[0];
 
   const handleAddNewFile = () => {
-    const newFile: File = {
+    const newFile: FileItem = {
         id: getId(),
         name: 'Untitled File',
-        project: project,
-        href: '#',
-        image: 'https://picsum.photos/800/600?grayscale',
+        project: selectedProject.name,
+        href: `/dashboard?project=${selectedProject.id}&file=untitled-${getId()}`,
+        image: `https://picsum.photos/800/600?grayscale&random=${getId()}`,
         image_hint: 'new file placeholder',
         lastUpdated: 'Just now',
     };
 
-    setAllFiles(prevFiles => ({
-        ...prevFiles,
-        [project]: [...(prevFiles[project] || []), newFile]
-    }));
+    const currentFiles = allFiles[selectedProject.id] || [];
+    setAllFiles({
+        ...allFiles,
+        [selectedProject.id]: [...currentFiles, newFile]
+    });
   };
 
   if (file) {
@@ -529,14 +557,15 @@ export function DashboardPageContent() {
     );
   }
 
-  const projectFiles = allFiles[project as keyof typeof allFiles] || [];
-  const setProjectFiles = (updatedFiles: File[]) => {
-    setAllFiles(prev => ({ ...prev, [project]: updatedFiles }));
+  const projectFiles = allFiles[selectedProject.id as keyof typeof allFiles] || [];
+  const setProjectFiles = (projectId: string, updatedFiles: FileItem[]) => {
+    setAllFiles({ ...allFiles, [projectId]: updatedFiles });
   }
 
   return (
      <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="flex items-center">
+            <h1 className="text-2xl font-semibold tracking-tight">{selectedProject.name}</h1>
             <div className="ml-auto flex items-center gap-2">
                 <Button onClick={handleAddNewFile}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -544,7 +573,7 @@ export function DashboardPageContent() {
                 </Button>
             </div>
         </div>
-        <ProjectGrid project={project} files={projectFiles} setFiles={setProjectFiles} />
+        <ProjectGrid project={selectedProject} files={projectFiles} setFiles={setProjectFiles} />
     </main>
   );
 }

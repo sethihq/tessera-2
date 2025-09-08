@@ -27,8 +27,12 @@ export function DashboardHeader() {
             <BreadcrumbList>
               <BreadcrumbItem>
                  <BreadcrumbLink asChild>
-                  <Link href="/dashboard">{projectName}</Link>
+                  <Link href="/dashboard">Home</Link>
                 </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                  <BreadcrumbPage>{projectName}</BreadcrumbPage>
               </BreadcrumbItem>
               {fileOpen && (
                 <>
@@ -41,7 +45,6 @@ export function DashboardHeader() {
             </BreadcrumbList>
           </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
-        <ThemeToggle />
       </div>
     </header>
   );

@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import React, { Suspense, useState, useEffect } from 'react';
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Folder,
   Plus,
@@ -12,6 +12,7 @@ import {
   Search,
   FilePlus,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { TesseraLogo } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,16 +22,25 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/compone
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchModal } from "@/components/search-modal";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
+import type { FileStore, Project } from '@/components/dashboard-page-content';
+import { initialFiles, initialProjects } from '@/components/dashboard-page-content';
+import { ThemeToggle } from "@/components/theme-toggle";
 
-const projects = [
-    { name: 'My Game', icon: Folder, fileCount: 2, href: '/dashboard' },
-    { name: 'Platformer Kit', icon: Folder, fileCount: 2, href: '/dashboard?project=platformer-kit' },
-];
+let idCounter = 5; // Start from a number higher than initial data
+const getId = () => `${idCounter++}`;
+
 
 function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const selectedProject = searchParams.get('project') || 'my-game';
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [allFiles, setAllFiles] = useState<FileStore>(initialFiles);
+  
+  const selectedProjectName = searchParams.get('project') || 'my-game';
+  
+  const selectedProject = projects.find(p => p.id === selectedProjectName) || projects[0];
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -53,15 +63,63 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
-  const handleAddNewFile = () => {
-    console.log('Adding new file to:', selectedProject);
-    // This would typically trigger a state update to add a file
+  const handleAddNewFile = (projectId: string) => {
+     const newFile = {
+      id: getId(),
+      name: 'Untitled File',
+      project: projects.find(p => p.id === projectId)?.name || 'Untitled',
+      href: '#',
+      image: `https://picsum.photos/800/600?grayscale&random=${getId()}`,
+      image_hint: 'new file placeholder',
+      lastUpdated: 'Just now',
+    };
+    setAllFiles(prev => ({
+      ...prev,
+      [projectId]: [...(prev[projectId] || []), newFile]
+    }));
   };
 
-  const handleDeleteProject = (projectName: string) => {
-    console.log('Deleting project:', projectName);
-    // This would typically trigger a state update to remove the project
+  const handleAddNewProject = () => {
+    const newId = getId();
+    const newProject = { 
+        id: `new-project-${newId}`,
+        name: `New Project ${projects.length + 1}`, 
+        icon: Folder, 
+        href: `/dashboard?project=new-project-${newId}`
+    };
+    setProjects(prev => [...prev, newProject]);
+    setAllFiles(prev => ({...prev, [newProject.id]: []}));
+    router.push(newProject.href);
   };
+  
+  const handleDeleteProject = (projectId: string) => {
+    if (confirm('Are you sure you want to delete this project and all its files?')) {
+        setProjects(prev => prev.filter(p => p.id !== projectId));
+        setAllFiles(prev => {
+            const newFiles = {...prev};
+            delete newFiles[projectId];
+            return newFiles;
+        });
+        
+        // If we deleted the active project, navigate to the first available one
+        if (selectedProjectName === projectId) {
+            const remainingProjects = projects.filter(p => p.id !== projectId);
+            if(remainingProjects.length > 0) {
+                router.push(remainingProjects[0].href);
+            } else {
+                 router.push('/dashboard');
+            }
+        }
+    }
+  };
+  
+  const handleRenameProject = (projectId: string) => {
+    const newName = prompt('Enter new project name:');
+    if (newName) {
+        setProjects(prev => prev.map(p => p.id === projectId ? {...p, name: newName} : p));
+    }
+  };
+
 
   return (
     <div className="grid h-dvh w-full lg:grid-cols-[280px_1fr]">
@@ -87,21 +145,17 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
               <h2 className="text-lg font-semibold tracking-tight">
                 Projects
               </h2>
-              <Button size="icon" variant="ghost">
+              <Button size="icon" variant="ghost" onClick={handleAddNewProject}>
                 <Plus className="h-4 w-4" /> 
               </Button>
             </div>
              <div className="flex flex-col gap-1 py-2">
                {projects.map(project => (
-                 <ContextMenu key={project.name}>
+                 <ContextMenu key={project.id}>
                     <ContextMenuTrigger>
-                      <Link href={project.href} key={project.name}>
+                      <Link href={project.href}>
                         <Button 
-                          variant={
-                            (selectedProject === 'my-game' && project.name === 'My Game') ||
-                            (selectedProject === 'platformer-kit' && project.name === 'Platformer Kit')
-                            ? 'secondary' : 'ghost'
-                          } 
+                          variant={selectedProject.id === project.id ? 'secondary' : 'ghost'} 
                           className="justify-start gap-3 px-2 w-full"
                         >
                           <project.icon /> {project.name}
@@ -109,12 +163,16 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
                       </Link>
                     </ContextMenuTrigger>
                     <ContextMenuContent className="w-48">
-                        <ContextMenuItem onClick={handleAddNewFile}>
+                        <ContextMenuItem onClick={() => handleAddNewFile(project.id)}>
                             <FilePlus className="mr-2 h-4 w-4" />
                             Add New File
                         </ContextMenuItem>
+                         <ContextMenuItem onClick={() => handleRenameProject(project.id)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Rename Project
+                        </ContextMenuItem>
                         <ContextMenuSeparator />
-                        <ContextMenuItem className="text-destructive" onClick={() => handleDeleteProject(project.name)}>
+                        <ContextMenuItem className="text-destructive" onClick={() => handleDeleteProject(project.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete Project
                         </ContextMenuItem>
@@ -125,49 +183,52 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
           </nav>
         </SidebarContent>
         <SidebarFooter className="border-t p-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start text-left gap-3 px-2">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage
-                        src="https://picsum.photos/100"
-                        alt="User avatar"
-                        data-ai-hint="user avatar"
-                      />
-                      <AvatarFallback>DV</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">Solo Dev</span>
-                      <span className="text-xs text-muted-foreground">
-                        Pro Plan
-                      </span>
-                    </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Solo Dev</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      solodev@tessera.com
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Log out</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-start text-left gap-3 px-2">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage
+                            src="https://picsum.photos/100"
+                            alt="User avatar"
+                            data-ai-hint="user avatar"
+                          />
+                          <AvatarFallback>DV</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Solo Dev</span>
+                          <span className="text-xs text-muted-foreground">
+                            Pro Plan
+                          </span>
+                        </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">Solo Dev</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          solodev@tessera.com
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>Log out</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <ThemeToggle />
+            </div>
         </SidebarFooter>
       </Sidebar>
        <div className="flex flex-col h-dvh">
         <DashboardHeader />
         <main className="flex-1 overflow-auto bg-muted/10">
-          {children}
+          {React.cloneElement(children as React.ReactElement, { projects, allFiles, setAllFiles })}
         </main>
       </div>
        <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
