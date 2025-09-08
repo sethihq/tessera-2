@@ -1,6 +1,6 @@
 
 'use client';
-import { useCallback } from 'react';
+import { useCallback, type ChangeEvent, type FormEvent } from 'react';
 import { Handle, Position, useReactFlow, useNodeId } from 'reactflow';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -50,6 +50,12 @@ export function InputNode({ id, data }: InputNodeProps) {
     setNodes((nodes) => nodes.filter((n) => n.id !== nodeId));
     setEdges((edges) => edges.filter((e) => e.source !== nodeId && e.target !== nodeId));
   }, [nodeId, setNodes, setEdges]);
+  
+  const handleTextareaInput = (event: FormEvent<HTMLTextAreaElement>) => {
+    const textarea = event.currentTarget;
+    textarea.style.height = 'auto'; // Reset height to recalculate
+    textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
+  };
 
   return (
     <div className="w-80 rounded-lg border bg-background text-foreground shadow-xl">
@@ -67,8 +73,10 @@ export function InputNode({ id, data }: InputNodeProps) {
               <Textarea
                 id={field.id}
                 defaultValue={field.value}
-                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                className="nodrag"
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleFieldChange(field.id, e.target.value)}
+                onInput={handleTextareaInput}
+                className="nodrag resize-none overflow-hidden"
+                rows={1}
               />
             ) : (
               <Input
