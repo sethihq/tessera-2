@@ -80,11 +80,10 @@
   }
 }
 
-.animated-edge .react-flow__edge-path {
-  stroke: url(#animated-gradient-url);
-  stroke-width: 3;
+.react-flow__edge.animated .react-flow__edge-path {
+    stroke: url(#animated-gradient-url);
+    stroke-width: 3;
+    animation: animated-gradient 3s ease infinite;
 }
 
-.animated-edge {
-  animation: animated-gradient 3s ease infinite;
-}
+    

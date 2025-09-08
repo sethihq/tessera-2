@@ -69,7 +69,7 @@ function Canvas() {
     );
     const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
     setReactFlowEdges(eds => 
-      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'custom', animated: true } : e)
+      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, animated: true } : e)
     );
 
     try {
@@ -170,7 +170,7 @@ function Canvas() {
         );
     } finally {
         setReactFlowEdges(eds => 
-            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'default', animated: false } : e)
+            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, animated: false } : e)
         );
     }
   }, [getNodes, setReactFlowNodes, toast, getEdges, setReactFlowEdges]);
@@ -199,7 +199,7 @@ function Canvas() {
     
     const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
     setReactFlowEdges(eds => 
-      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'custom', animated: true } : e)
+      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, animated: true } : e)
     );
 
     try {
@@ -228,7 +228,7 @@ function Canvas() {
         );
     } finally {
         setReactFlowEdges(eds => 
-            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'default', animated: false } : e)
+            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, animated: false } : e)
         );
     }
 
@@ -575,5 +575,7 @@ export function DashboardPageContent() {
     </main>
   );
 }
+
+    
 
     
