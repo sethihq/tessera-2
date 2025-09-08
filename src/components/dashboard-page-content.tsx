@@ -359,13 +359,8 @@ function Canvas() {
 
   return (
     <div className="flex h-full w-full" onKeyDown={onKeyDown} tabIndex={0}>
-        <NodesSidebar />
+        <NodesSidebar projectName={projectName} />
         <div className="flex-1 h-full relative">
-            <Link href={`/dashboard?project=${projectName}`}>
-                <Button variant="outline" size="icon" className="absolute top-4 left-4 z-10">
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
-            </Link>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}

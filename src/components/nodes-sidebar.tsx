@@ -2,9 +2,10 @@
 
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Workflow, Text, ImageIcon, Scissors, User, Bot, Frame, ToyBrick } from 'lucide-react';
+import { Workflow, Text, ImageIcon, Scissors, User, Bot, Frame, ToyBrick, ChevronLeft } from 'lucide-react';
 import type { DragEvent } from 'react';
 
 const legoBlocks = {
@@ -93,7 +94,11 @@ const workflows = [
     }
 ];
 
-export function NodesSidebar() {
+interface NodesSidebarProps {
+    projectName: string;
+}
+
+export function NodesSidebar({ projectName }: NodesSidebarProps) {
   const onDragStart = (event: DragEvent, type: 'input' | 'output' | 'workflow', payload: any) => {
     const data = { type, payload };
     if (type !== 'workflow') {
@@ -104,9 +109,17 @@ export function NodesSidebar() {
   };
 
   return (
-    <aside className="w-80 border-r bg-background p-4">
-      <h2 className="text-lg font-semibold tracking-tight mb-4">Lego Blocks</h2>
-      <div className="space-y-4">
+    <aside className="w-80 border-r bg-background p-4 flex flex-col h-full">
+        <div className="mb-4">
+            <Link href={`/dashboard?project=${projectName}`}>
+                <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Back to Project
+                </Button>
+            </Link>
+        </div>
+      <h2 className="text-lg font-semibold tracking-tight mb-4 px-2">Lego Blocks</h2>
+      <div className="space-y-4 flex-1 overflow-y-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
