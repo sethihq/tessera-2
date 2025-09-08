@@ -3,7 +3,7 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "./ui/button";
-import { Share2, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -43,14 +43,9 @@ export function DashboardHeader() {
           </Breadcrumb>
         </div>
       ) : (
-        <h1 className="text-xl font-semibold md:text-2xl">{projectName}</h1>
+         <div />
       )}
-
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline">
-          <Share2 className="mr-2 h-4 w-4" />
-          Share
-        </Button>
         <ThemeToggle />
       </div>
     </header>
