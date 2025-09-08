@@ -32,7 +32,7 @@ import { Button } from '@/components/ui/button';
 import { generateSpriteSheet } from '@/ai/flows/generate-sprite-sheet';
 import { generateGifFromSpriteSheet } from '@/ai/flows/generate-gif-from-sprite-sheet';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Folder } from 'lucide-react';
+import { Plus, Pencil, Trash2, Folder, ChevronLeft } from 'lucide-react';
 import { CustomEdge } from '@/components/custom-edge';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { useDashboard } from '@/contexts/dashboard-context';
@@ -47,6 +47,8 @@ let idCounter = 5; // Start from a number higher than initial data
 const getId = () => `${idCounter++}`;
 
 function Canvas() {
+  const searchParams = useSearchParams();
+  const projectName = searchParams.get('project') || 'my-game';
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
@@ -358,7 +360,12 @@ function Canvas() {
   return (
     <div className="flex h-full w-full" onKeyDown={onKeyDown} tabIndex={0}>
         <NodesSidebar />
-        <div className="flex-1 h-full">
+        <div className="flex-1 h-full relative">
+            <Link href={`/dashboard?project=${projectName}`}>
+                <Button variant="outline" size="icon" className="absolute top-4 left-4 z-10">
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+            </Link>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -476,7 +483,7 @@ function ProjectGrid({ project, files, setFiles }: { project: Project; files: Fi
             {files.map((item) => (
               <ContextMenu key={item.id}>
                 <ContextMenuTrigger>
-                  <Card className="overflow-hidden transition-all hover:shadow-lg group flex flex-col">
+                  <Card className="overflow-hidden transition-all hover:shadow-lg group flex flex-col h-full">
                     <Link href={item.href} className="flex flex-col h-full">
                         <AspectRatio ratio={16/9}>
                             <Image 
