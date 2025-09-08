@@ -58,8 +58,8 @@ export function InputNode({ id, data }: InputNodeProps) {
   };
 
   return (
-    <div className="w-80 rounded-lg border bg-background text-foreground shadow-xl">
-      <div className="flex items-center justify-between border-b border-border p-4">
+    <div className="w-80 rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex items-center justify-between border-b p-4">
         <div className="text-sm font-semibold tracking-tight">{data.label}</div>
         <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={onDelete}>
           <X className="h-4 w-4" />
