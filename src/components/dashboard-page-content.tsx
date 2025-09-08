@@ -196,8 +196,10 @@ function Canvas() {
     setReactFlowNodes(nds => 
       nds.map(n => n.id === nodeId ? { ...n, data: { ...n.data, loading: true } } : n)
     );
+    
+    const animatedEdgeIds = new Set(allEdges.filter(e => e.target === nodeId).map(e => e.id));
     setReactFlowEdges(eds => 
-      eds.map(e => e.target === nodeId ? { ...e, type: 'custom', animated: true } : e)
+      eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'custom', animated: true } : e)
     );
 
     try {
@@ -226,7 +228,7 @@ function Canvas() {
         );
     } finally {
         setReactFlowEdges(eds => 
-            eds.map(e => e.target === nodeId ? { ...e, type: 'default', animated: false } : e)
+            eds.map(e => animatedEdgeIds.has(e.id) ? { ...e, type: 'default', animated: false } : e)
         );
     }
 
@@ -244,7 +246,7 @@ function Canvas() {
 
   const onConnect = useCallback(
     (params: Edge | Connection) => {
-        const newEdge = { ...params };
+        const newEdge = { ...params, type: 'default' };
         const allNodes = getNodes();
         const sourceNode = allNodes.find(n => n.id === params.source);
         const targetNode = allNodes.find(n => n.id === params.target);
@@ -307,6 +309,7 @@ function Canvas() {
             id: `e${idMap.get(edge.source)}-${idMap.get(edge.target)}`,
             source: idMap.get(edge.source)!,
             target: idMap.get(edge.target)!,
+            type: 'default'
           });
         });
 
@@ -572,3 +575,5 @@ export function DashboardPageContent() {
     </main>
   );
 }
+
+    
