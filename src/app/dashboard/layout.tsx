@@ -22,8 +22,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/compone
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchModal } from "@/components/search-modal";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
-import type { FileStore, Project } from '@/components/dashboard-page-content';
-import { initialFiles, initialProjects } from '@/components/dashboard-page-content';
+import { DashboardProvider, useDashboard } from '@/contexts/dashboard-context';
 import { ThemeToggle } from "@/components/theme-toggle";
 
 let idCounter = 5; // Start from a number higher than initial data
@@ -35,8 +34,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [allFiles, setAllFiles] = useState<FileStore>(initialFiles);
+  const { projects, setProjects, setAllFiles } = useDashboard();
   
   const selectedProjectName = searchParams.get('project') || 'my-game';
   
@@ -101,10 +99,9 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             return newFiles;
         });
         
-        // If we deleted the active project, navigate to the first available one
+        const remainingProjects = projects.filter(p => p.id !== projectId);
         if (selectedProjectName === projectId) {
-            const remainingProjects = projects.filter(p => p.id !== projectId);
-            if(remainingProjects.length > 0) {
+            if(remainingProjects.length > 1) {
                 router.push(remainingProjects[0].href);
             } else {
                  router.push('/dashboard');
@@ -155,7 +152,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
                     <ContextMenuTrigger>
                       <Link href={project.href}>
                         <Button 
-                          variant={selectedProject.id === project.id ? 'secondary' : 'ghost'} 
+                          variant={selectedProject && selectedProject.id === project.id ? 'secondary' : 'ghost'} 
                           className="justify-start gap-3 px-2 w-full"
                         >
                           <project.icon /> {project.name}
@@ -228,7 +225,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
        <div className="flex flex-col h-dvh">
         <DashboardHeader />
         <main className="flex-1 overflow-auto bg-muted/10">
-          {React.cloneElement(children as React.ReactElement, { projects, allFiles, setAllFiles })}
+          {children}
         </main>
       </div>
        <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
@@ -240,7 +237,9 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <DashboardProvider>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      </DashboardProvider>
     </Suspense>
   )
 }

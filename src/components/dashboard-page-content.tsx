@@ -35,6 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Folder } from 'lucide-react';
 import { CustomEdge } from '@/components/custom-edge';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { useDashboard } from '@/contexts/dashboard-context';
 
 
 const initialNodes: Node[] = [];
@@ -511,25 +512,17 @@ function ProjectGrid({ project, files, setFiles }: { project: Project; files: Fi
     )
 }
 
-interface DashboardPageContentProps {
-  projects?: Project[];
-  allFiles?: FileStore;
-  setAllFiles?: (files: FileStore) => void;
-}
-
-export function DashboardPageContent({ projects: layoutProjects, allFiles: layoutAllFiles, setAllFiles: layoutSetAllFiles }: DashboardPageContentProps) {
+export function DashboardPageContent() {
   const searchParams = useSearchParams();
   const file = searchParams.get('file');
   const projectName = searchParams.get('project') || 'my-game';
   
-  // These props are passed down from the layout
-  const allFiles = layoutAllFiles!;
-  const setAllFiles = layoutSetAllFiles!;
-  const projects = layoutProjects!;
+  const { allFiles, setAllFiles, projects } = useDashboard();
 
   const selectedProject = projects.find(p => p.id === projectName) || projects[0];
 
   const handleAddNewFile = () => {
+    if (!selectedProject) return;
     const newFile: FileItem = {
         id: getId(),
         name: 'Untitled File',
