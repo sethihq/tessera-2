@@ -68,7 +68,7 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
       id: getId(),
       name: 'Untitled File',
       project: projects.find(p => p.id === projectId)?.name || 'Untitled',
-      href: '#',
+      href: `/dashboard?project=${projectId}&file=untitled-${getId()}`,
       image: `https://picsum.photos/800/600?grayscale&random=${getId()}`,
       image_hint: 'new file placeholder',
       lastUpdated: 'Just now',
