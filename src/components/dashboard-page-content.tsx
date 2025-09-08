@@ -246,7 +246,7 @@ function Canvas() {
 
   const onConnect = useCallback(
     (params: Edge | Connection) => {
-        const newEdge = { ...params, type: 'default' };
+        const newEdge = { ...params, animated: false, type: 'default' };
         const allNodes = getNodes();
         const sourceNode = allNodes.find(n => n.id === params.source);
         const targetNode = allNodes.find(n => n.id === params.target);
@@ -359,6 +359,13 @@ function Canvas() {
     },
     [getNodes, setReactFlowNodes]
   );
+  
+  const defaultEdgeOptions = {
+    animated: false,
+    type: 'default',
+  };
+
+  const nodeClassName = (node: Node) => `!bg-transparent !border-none !p-0 !cursor-default`;
 
   return (
     <div className="flex h-full w-full" onKeyDown={onKeyDown} tabIndex={0}>
@@ -381,6 +388,8 @@ function Canvas() {
                 className={activeTool === 'pan' ? 'cursor-grab' : ''}
                 proOptions={proOptions}
                 deleteKeyCode={['Backspace', 'Delete']}
+                defaultEdgeOptions={defaultEdgeOptions}
+                nodeClassName={nodeClassName}
             >
                 <Background />
                  <defs>
@@ -575,6 +584,8 @@ export function DashboardPageContent() {
     </main>
   );
 }
+
+    
 
     
 
