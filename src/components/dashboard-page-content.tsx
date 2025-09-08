@@ -354,7 +354,7 @@ function Canvas() {
   );
 
   return (
-    <div className="flex h-full" onKeyDown={onKeyDown} tabIndex={0}>
+    <div className="flex h-full w-full" onKeyDown={onKeyDown} tabIndex={0}>
         <NodesSidebar />
         <div className="flex-1 h-full">
             <ReactFlow
@@ -435,25 +435,25 @@ function ProjectGrid({ project }: { project: 'my-game' | 'platformer-kit' }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {files.map((item, index) => (
-                <Link href={item.href} key={index}>
-                    <Card className="overflow-hidden transition-all hover:shadow-lg group">
-                        <AspectRatio ratio={16/9}>
-                            <Image 
-                                src={item.image} 
-                                alt={item.name} 
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform"
-                                data-ai-hint={item.image_hint}
-                            />
-                        </AspectRatio>
-                        <CardHeader>
-                            <CardTitle>{item.name}</CardTitle>
-                        </CardHeader>
-                        <CardFooter className="flex justify-between items-center text-sm text-muted-foreground">
-                            <span>Updated {item.lastUpdated}</span>
-                        </CardFooter>
-                    </Card>
-                </Link>
+                <Card key={index} className="overflow-hidden transition-all hover:shadow-lg group">
+                  <Link href={item.href} >
+                      <AspectRatio ratio={16/9}>
+                          <Image 
+                              src={item.image} 
+                              alt={item.name} 
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform"
+                              data-ai-hint={item.image_hint}
+                          />
+                      </AspectRatio>
+                      <CardHeader>
+                          <CardTitle>{item.name}</CardTitle>
+                      </CardHeader>
+                      <CardFooter>
+                          <span className="text-sm text-muted-foreground">Updated {item.lastUpdated}</span>
+                      </CardFooter>
+                  </Link>
+                </Card>
             ))}
         </div>
     )
@@ -466,14 +466,16 @@ export function DashboardPageContent() {
 
   if (file) {
     return (
-      <ReactFlowProvider>
-        <Canvas />
-      </ReactFlowProvider>
+      <div className="h-full w-full">
+        <ReactFlowProvider>
+          <Canvas />
+        </ReactFlowProvider>
+      </div>
     );
   }
 
   return (
-     <main className="grid flex-1 items-start gap-4 sm:py-0">
+     <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
         <div className="flex items-center">
             <div className="ml-auto flex items-center gap-2">
                 <Button>
@@ -486,5 +488,3 @@ export function DashboardPageContent() {
     </main>
   );
 }
-
-    

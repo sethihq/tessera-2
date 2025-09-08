@@ -22,29 +22,24 @@ export function DashboardHeader() {
   const projectName = searchParams.get('project') === 'platformer-kit' ? 'Platformer Kit' : 'My Game';
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-      {fileOpen ? (
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/dashboard"><Home className="h-4 w-4"/></Link>
-          </Button>
-          <Breadcrumb>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+       <Breadcrumb className="hidden md:flex">
             <BreadcrumbList>
               <BreadcrumbItem>
                  <BreadcrumbLink asChild>
                   <Link href="/dashboard">{projectName}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Main Scene</BreadcrumbPage>
-              </BreadcrumbItem>
+              {fileOpen && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Main Scene</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
             </BreadcrumbList>
           </Breadcrumb>
-        </div>
-      ) : (
-         <div />
-      )}
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
       </div>

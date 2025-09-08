@@ -26,7 +26,6 @@ const projects = [
 
 function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
-  const fileOpen = searchParams.get('file');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const selectedProject = searchParams.get('project') || 'my-game';
 
@@ -50,18 +49,6 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
-
-  if (fileOpen) {
-    return (
-       <div className="flex flex-col h-dvh bg-background">
-        <DashboardHeader />
-        <main className="flex-1">
-            {children}
-        </main>
-        <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
-      </div>
-    )
-  }
 
   return (
     <div className="grid h-dvh w-full lg:grid-cols-[280px_1fr]">
@@ -149,10 +136,10 @@ function DashboardLayoutContent({ children }: { children: ReactNode }) {
             </DropdownMenu>
         </SidebarFooter>
       </Sidebar>
-       <div className="flex flex-col">
+       <div className="flex flex-col h-dvh">
         <DashboardHeader />
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/10">
-            {children}
+        <main className="flex-1 overflow-auto bg-muted/10">
+          {children}
         </main>
       </div>
        <SearchModal open={isSearchModalOpen} onOpenChange={setIsSearchModalOpen} />
