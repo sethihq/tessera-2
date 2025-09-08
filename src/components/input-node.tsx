@@ -52,23 +52,23 @@ export function InputNode({ id, data }: InputNodeProps) {
   }, [nodeId, setNodes, setEdges]);
 
   return (
-    <div className="w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm">
-      <div className="flex items-center justify-between border-b border-neutral-700 p-4">
+    <div className="w-80 rounded-lg border bg-background text-foreground shadow-xl">
+      <div className="flex items-center justify-between border-b border-border p-4">
         <div className="text-sm font-semibold tracking-tight">{data.label}</div>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-400 hover:bg-neutral-700 hover:text-white" onClick={onDelete}>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
       </div>
       <div className="p-4 space-y-4">
         {data.fields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id} className="text-xs font-medium text-neutral-400">{field.label}</Label>
+            <Label htmlFor={field.id} className="text-xs font-medium text-muted-foreground">{field.label}</Label>
             {field.type === 'textarea' ? (
               <Textarea
                 id={field.id}
                 defaultValue={field.value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                className="nodrag"
               />
             ) : (
               <Input
@@ -76,7 +76,7 @@ export function InputNode({ id, data }: InputNodeProps) {
                 type={field.type}
                 defaultValue={field.value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                className="nodrag"
               />
             )}
           </div>

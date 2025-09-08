@@ -55,17 +55,17 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
   const isAssetGeneratorReady = !isGifNode; 
 
   return (
-    <div className={`w-80 rounded-lg border border-neutral-700 bg-neutral-900/80 text-white shadow-xl backdrop-blur-sm ${isTarget ? 'border-primary' : ''}`}>
-       <div className="flex items-center justify-between border-b border-neutral-700 p-4">
+    <div className={`w-80 rounded-lg border bg-background text-foreground shadow-xl ${isTarget ? 'border-primary' : 'border-border'}`}>
+       <div className="flex items-center justify-between border-b border-border p-4">
         <div className="text-sm font-semibold tracking-tight">{data.label}</div>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-400 hover:bg-neutral-700 hover:text-white" onClick={onDelete}>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:bg-accent hover:text-accent-foreground" onClick={onDelete}>
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       <div className="p-4 flex flex-col items-center justify-center gap-4 min-h-[200px]">
         {data.loading ? (
-          <Skeleton className="w-[250px] h-[250px] bg-neutral-700" />
+          <Skeleton className="w-[250px] h-[250px] bg-muted" />
         ) : displayImage ? (
           <Image
             src={displayImage}
@@ -75,7 +75,7 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
             className="rounded-md"
           />
         ) : (
-          <div className="text-neutral-400 text-sm text-center px-6">
+          <div className="text-muted-foreground text-sm text-center px-6">
             {isGifNode ? 'Connect an Asset Generator node' : 'Connect a sequence of Keyframe nodes'}
           </div>
         )}
@@ -83,23 +83,23 @@ export function ImageNode({ id, data, onGenerate, onGenerateGif }: ImageNodeProp
         {isGifNode && (data.sourceImage || data.image) && !data.loading && (
            <div className="w-full grid grid-cols-2 gap-4 pt-4">
             <div className="space-y-2">
-                <Label htmlFor="columns" className="text-xs font-medium text-neutral-400">Columns</Label>
+                <Label htmlFor="columns" className="text-xs font-medium text-muted-foreground">Columns</Label>
                 <Input
                 id="columns"
                 type="number"
                 value={columns}
                 onChange={(e) => setColumns(parseInt(e.target.value, 10))}
-                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                className="nodrag"
                 />
             </div>
             <div className="space-y-2">
-                 <Label htmlFor="rows" className="text-xs font-medium text-neutral-400">Rows</Label>
+                 <Label htmlFor="rows" className="text-xs font-medium text-muted-foreground">Rows</Label>
                 <Input
                 id="rows"
                 type="number"
                 value={rows}
                 onChange={(e) => setRows(parseInt(e.target.value, 10))}
-                className="nodrag bg-neutral-800 border-neutral-700 text-white focus:ring-primary"
+                className="nodrag"
                 />
             </div>
           </div>
