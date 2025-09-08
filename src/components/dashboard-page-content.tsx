@@ -476,8 +476,8 @@ function ProjectGrid({ project, files, setFiles }: { project: Project; files: Fi
             {files.map((item) => (
               <ContextMenu key={item.id}>
                 <ContextMenuTrigger>
-                  <Card className="overflow-hidden transition-all hover:shadow-lg group">
-                    <Link href={item.href} >
+                  <Card className="overflow-hidden transition-all hover:shadow-lg group flex flex-col">
+                    <Link href={item.href} className="flex flex-col h-full">
                         <AspectRatio ratio={16/9}>
                             <Image 
                                 src={item.image} 
@@ -487,7 +487,7 @@ function ProjectGrid({ project, files, setFiles }: { project: Project; files: Fi
                                 data-ai-hint={item.image_hint}
                             />
                         </AspectRatio>
-                        <CardHeader>
+                        <CardHeader className="flex-grow">
                             <CardTitle>{item.name}</CardTitle>
                         </CardHeader>
                         <CardFooter>
